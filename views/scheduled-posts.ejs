@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Scheduled & Published Posts</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/posts/drafts">Drafts</a></li>
+        <li><a href="/posts/scheduled">Posts</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Scheduled & Published Posts</h1>
+      <a href="/posts/create" class="btn btn-primary">+ Create New Post</a>
+    </div>
+
+    <% if (!posts || posts.length === 0) { %>
+      <div class="empty-state">
+        <p>📅 No scheduled or published posts yet.</p>
+        <a href="/posts/create" class="btn btn-primary">Create your first post</a>
+      </div>
+    <% } else { %>
+      <div class="posts-list">
+        <% posts.forEach(post => { %>
+          <div class="post-card">
+            <div class="post-header">
+              <div>
+                <h3><%= post.title || 'Untitled' %></h3>
+                <span class="badge badge-<%= post.status %>"><%= post.status.toUpperCase() %></span>
+              </div>
+              <small>
+                <% if (post.status === 'published') { %>
+                  Published: <%= new Date(post.published_at).toLocaleString() %>
+                <% } else { %>
+                  Scheduled: <%= new Date(post.scheduled_time).toLocaleString() %>
+                <% } %>
+              </small>
+            </div>
+
+            <div class="post-content">
+              <% if (post.image_path) { %>
+                <img src="<%= post.image_path %>" alt="Post image" class="post-image">
+              <% } %>
+              <p><%= post.content.substring(0, 200) %>...</p>
+            </div>
+
+            <div class="post-actions">
+              <% if (post.status !== 'published') { %>
+                <button class="btn btn-danger" onclick="deletePost('<%= post.id %>')">
+                  Delete
+                </button>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script>
+    function deletePost(postId) {
+      if (confirm('Are you sure you want to delete this post?')) {
+        fetch('/posts/' + postId, { method: 'DELETE' })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message || data.error);
+            location.reload();
+          })
+          .catch(err => console.error('Delete error:', err));
+      }
+    }
+  </script>
+</body>
+</html>
