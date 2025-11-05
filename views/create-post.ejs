@@ -68,8 +68,13 @@
           id="image"
           name="image"
           accept="image/jpeg,image/png,image/gif,image/webp"
+          onchange="previewImage(event)"
         >
         <small>Allowed: JPEG, PNG, GIF, WebP. Max 5MB</small>
+        <div id="imagePreview" class="image-preview-container" style="display: none; margin-top: 1rem;">
+          <img id="previewImg" src="" alt="Preview" class="image-preview">
+          <button type="button" class="btn btn-small btn-danger" onclick="removeImage()">Remove</button>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -97,6 +102,44 @@
         contentArea.value = contentArea.value.substring(0, charLimit);
       }
     });
+
+    // Image preview function
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const previewContainer = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
+      
+      if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+          alert('File size exceeds 5MB limit.');
+          event.target.value = '';
+          previewContainer.style.display = 'none';
+          return;
+        }
+
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          alert('Only JPEG, PNG, GIF, and WebP images are allowed.');
+          event.target.value = '';
+          previewContainer.style.display = 'none';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Remove image function
+    function removeImage() {
+      document.getElementById('image').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+    }
   </script>
 </body>
 </html>

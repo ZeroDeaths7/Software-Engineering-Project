@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
