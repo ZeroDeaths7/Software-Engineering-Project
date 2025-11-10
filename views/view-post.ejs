@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMMS - <%= post.title %></title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=2">
 </head>
 <body>
   <nav class="navbar">
@@ -27,20 +27,15 @@
         <div class="post-meta">
           <span>By <%= post.username %></span>
           <span>•</span>
-          <span><%= post.status === 'published' ? 'Published' : 'Scheduled' %> <%= new Date(post.status === 'published' ? post.published_at : post.scheduled_time).toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }) %></span>
+          <span>
+            <%= post.status === 'published' ? 'Published' : 'Scheduled' %>
+            <span class="js-datetime" data-dt="<%= post.status === 'published' ? (post.published_at || '') : (post.scheduled_time || '') %>"></span>
+          </span>
         </div>
       </header>
 
       <% if (post.image_path) { %>
-        <div class="post-image">
-          <img src="<%= post.image_path %>" alt="Post image">
-        </div>
+        <img src="<%= post.image_path %>" alt="Post image" class="post-image">
       <% } %>
 
       <div class="post-content">
@@ -62,29 +57,64 @@
     <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
   </footer>
 
+  <script src="/modal.js?v=6"></script>
+  <script>
+    // Client-side datetime rendering to avoid timezone parsing inconsistencies
+    (function renderDatetimes() {
+      const nodes = document.querySelectorAll('.js-datetime');
+      const opts = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      nodes.forEach(n => {
+        const raw = n.getAttribute('data-dt') || '';
+        if (!raw) return n.textContent = '';
+
+        let dt;
+        // If stored with a space between date and time (SQLite CURRENT_TIMESTAMP like 'YYYY-MM-DD HH:MM:SS'), treat as UTC
+        if (/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:?\d{0,2}/.test(raw)) {
+          dt = new Date(raw.replace(' ', 'T') + 'Z'); // parse as UTC then convert to local
+        } else if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:?\d{0,2}/.test(raw)) {
+          // ISO-like with 'T' — assume it's local time (was created on client)
+          dt = new Date(raw);
+        } else {
+          dt = new Date(raw);
+        }
+
+        if (isNaN(dt.getTime())) {
+          n.textContent = raw; // fallback
+        } else {
+          n.textContent = dt.toLocaleString('en-US', opts);
+        }
+      });
+    })();
+  </script>
   <script>
     function editPost(postId) {
       window.location.href = `/posts/edit/${postId}`;
     }
 
     function deletePost(postId) {
-      if (confirm('Are you sure you want to delete this post?')) {
-        fetch(`/posts/${postId}`, { 
-          method: 'DELETE' 
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            window.location.href = '/dashboard';
-          } else {
-            alert(data.error || 'Failed to delete post');
-          }
-        })
-        .catch(err => {
-          console.error('Error:', err);
-          alert('Failed to delete post');
-        });
-      }
+      showConfirm(
+        'Delete Post',
+        'Are you sure you want to delete this post? This action cannot be undone.',
+        () => {
+          fetch(`/posts/${postId}`, { 
+            method: 'DELETE' 
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              showAlert('Success', 'Post deleted successfully!', 'success', () => {
+                window.location.href = '/dashboard';
+              });
+            } else {
+              showAlert('Error', data.error || 'Failed to delete post', 'error');
+            }
+          })
+          .catch(err => {
+            console.error('Error:', err);
+            showAlert('Error', 'Failed to delete post', 'error');
+          });
+        }
+      );
     }
   </script>
 </body>

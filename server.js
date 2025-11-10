@@ -96,4 +96,90 @@ db.initialize().then(() => {
   process.exit(1);
 });
 
+// Auto-publish scheduler: runs every minute and publishes posts whose scheduled_time has passed
+// This provides a lightweight server-side scheduler so posts are published when the time arrives.
+setInterval(async () => {
+  try {
+    const now = new Date();
+    // Format current time as YYYY-MM-DDTHH:MM:SS (local time, no timezone)
+    const pad = (n) => String(n).padStart(2, '0');
+    const localNow = `${pad(now.getFullYear())}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    
+    // Get all scheduled posts for debug logging
+    const scheduledPosts = await db.all(
+      `SELECT id, title, scheduled_time, status FROM posts WHERE status = 'scheduled' ORDER BY scheduled_time ASC`
+    );
+    
+    if (scheduledPosts && scheduledPosts.length > 0) {
+      console.log(`[Scheduler] Current server time (local): ${localNow}`);
+      console.log(`[Scheduler] Checking ${scheduledPosts.length} scheduled post(s):`);
+      scheduledPosts.forEach(post => {
+        const isPast = post.scheduled_time <= localNow;
+        console.log(
+          `  - Post ${post.id} "${post.title}": scheduled_time=${post.scheduled_time}, ready=${isPast}`
+        );
+      });
+    }
+    
+    // Compare as strings since we're storing local time as ISO string
+    const result = await db.run(
+      `UPDATE posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE status = 'scheduled' AND scheduled_time <= ?`,
+      [localNow]
+    );
+
+    if (result && result.changes && result.changes > 0) {
+      console.log(`[Scheduler] ✓ Auto-published ${result.changes} post(s) at ${new Date().toISOString()}`);
+    }
+  } catch (err) {
+    console.error('[Scheduler] Auto-publish error:', err);
+  }
+}, 60 * 1000);
+
+// Debug endpoint: manually check scheduler status and trigger publish
+app.get('/debug/scheduler', async (req, res) => {
+  try {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const localNow = `${pad(now.getFullYear())}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    
+    console.log(`[Debug] Manual scheduler check at ${now.toISOString()}`);
+    console.log(`[Debug] Local time string: ${localNow}`);
+    
+    // Get all scheduled posts
+    const scheduledPosts = await db.all(
+      `SELECT id, title, scheduled_time, status FROM posts WHERE status = 'scheduled' ORDER BY scheduled_time ASC`
+    );
+    
+    console.log(`[Debug] Found ${scheduledPosts.length} scheduled posts`);
+    scheduledPosts.forEach(post => {
+      const isPast = post.scheduled_time <= localNow;
+      console.log(
+        `  - Post ${post.id}: scheduled=${post.scheduled_time}, isPast=${isPast}`
+      );
+    });
+    
+    // Manually run the update query
+    const result = await db.run(
+      `UPDATE posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+       WHERE status = 'scheduled' AND scheduled_time <= ?`,
+      [localNow]
+    );
+    
+    console.log(`[Debug] Published ${result.changes} posts in this manual trigger`);
+    
+    res.json({
+      currentTime: now.toISOString(),
+      localTimeString: localNow,
+      scheduledPostsCount: scheduledPosts.length,
+      scheduledPosts: scheduledPosts,
+      publishResult: result,
+      message: `Server time is ${now.toISOString()} (local: ${localNow}). Check console logs for details.`
+    });
+  } catch (err) {
+    console.error('[Debug] Scheduler check error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = app;
