@@ -35,10 +35,10 @@
     <% } else { %>
       <div class="posts-list">
         <% posts.forEach(post => { %>
-          <div class="post-card">
+          <div class="post-card" onclick="viewPost('<%= post.id %>')">
             <div class="post-header">
               <div>
-                <h3><a href="/posts/<%= post.id %>"><%= post.title || 'Untitled' %></a></h3>
+                <h3><%= post.title || 'Untitled' %></h3>
                 <span class="badge badge-<%= post.status %>"><%= post.status.toUpperCase() %></span>
               </div>
               <small>
@@ -57,8 +57,8 @@
               <p><%= post.content.substring(0, 200) %>...</p>
             </div>
 
-            <div class="post-actions">
-              <button class="btn" onclick="editPost('<%= post.id %>')">
+            <div class="post-actions" onclick="event.stopPropagation()">
+              <button class="btn btn-secondary" onclick="editPost('<%= post.id %>')">
                 Edit
               </button>
               <button class="btn btn-danger" onclick="deletePost('<%= post.id %>')">
@@ -76,6 +76,10 @@
   </footer>
 
   <script>
+    function viewPost(postId) {
+      window.location.href = `/posts/${postId}`;
+    }
+
     function editPost(postId) {
       window.location.href = `/posts/edit/${postId}`;
     }

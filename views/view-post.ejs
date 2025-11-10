@@ -5,6 +5,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMMS - <%= post.title %></title>
   <link rel="stylesheet" href="/style.css">
+  <style>
+    .post-back-button {
+      margin-bottom: 2rem;
+    }
+
+    .post-back-button a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #a0a0b0;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.3s ease;
+    }
+
+    .post-back-button a:hover {
+      color: #d946ef;
+    }
+
+    .post-full .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #a0a0b0;
+      font-size: 0.95rem;
+      flex-wrap: wrap;
+    }
+
+    .post-full .badge {
+      display: inline-block;
+      padding: 0.35rem 1rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-published {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .badge-scheduled {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .badge-draft {
+      background: rgba(156, 163, 175, 0.2);
+      color: #9ca3af;
+      border: 1px solid rgba(156, 163, 175, 0.4);
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -21,15 +77,19 @@
   </nav>
 
   <div class="container">
+    <div class="post-back-button">
+      <a href="javascript:history.back()">← Back</a>
+    </div>
+
     <article class="post-full">
       <header class="post-header">
         <h1><%= post.title %></h1>
         <div class="post-meta">
-          <span>By <%= post.username %></span>
-          <span>•</span>
-          <span><%= post.status === 'published' ? 'Published' : 'Scheduled' %> <%= new Date(post.status === 'published' ? post.published_at : post.scheduled_time).toLocaleDateString('en-US', { 
+          <span>📝 By <strong><%= post.username %></strong></span>
+          <span class="badge badge-<%= post.status %>"><%= post.status %></span>
+          <span>📅 <%= post.status === 'published' ? 'Published' : 'Scheduled' %> <%= new Date(post.status === 'published' ? post.published_at : post.scheduled_time).toLocaleString('en-US', { 
             year: 'numeric', 
-            month: 'long', 
+            month: 'short', 
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -39,7 +99,7 @@
 
       <% if (post.image_path) { %>
         <div class="post-image">
-          <img src="<%= post.image_path %>" alt="Post image">
+          <img src="<%= post.image_path %>" alt="Post image for <%= post.title %>">
         </div>
       <% } %>
 
@@ -47,11 +107,13 @@
         <%= post.content %>
       </div>
 
-      <% if (post.user_id === locals.userId) { %>
+      <% if (post.user_id === userId) { %>
         <div class="post-actions">
           <% if (post.status !== 'published') { %>
-            <button class="btn" onclick="editPost('<%= post.id %>')">Edit</button>
-            <button class="btn btn-danger" onclick="deletePost('<%= post.id %>')">Delete</button>
+            <button class="btn btn-primary" onclick="editPost('<%= post.id %>')">✏️ Edit</button>
+            <button class="btn btn-danger" onclick="deletePost('<%= post.id %>')">🗑️ Delete</button>
+          <% } else { %>
+            <button class="btn btn-secondary" disabled>✓ Published (Cannot Edit)</button>
           <% } %>
         </div>
       <% } %>
@@ -68,13 +130,14 @@
     }
 
     function deletePost(postId) {
-      if (confirm('Are you sure you want to delete this post?')) {
+      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
         fetch(`/posts/${postId}`, { 
           method: 'DELETE' 
         })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
+            alert('Post deleted successfully');
             window.location.href = '/dashboard';
           } else {
             alert(data.error || 'Failed to delete post');

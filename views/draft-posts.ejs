@@ -35,7 +35,7 @@
     <% } else { %>
       <div class="posts-list">
         <% posts.forEach(post => { %>
-          <div class="post-card">
+          <div class="post-card" onclick="viewPost('<%= post.id %>')">
             <div class="post-header">
               <h3><%= post.title || 'Untitled' %></h3>
               <small><%= new Date(post.created_at).toLocaleString() %></small>
@@ -48,7 +48,7 @@
               <p><%= post.content.substring(0, 200) %>...</p>
             </div>
 
-            <div class="post-actions">
+            <div class="post-actions" onclick="event.stopPropagation()">
               <button class="btn btn-secondary" onclick="editPost('<%= post.id %>')">
                 Edit
               </button>
@@ -70,6 +70,14 @@
   </footer>
 
   <script>
+    function viewPost(postId) {
+      window.location.href = `/posts/${postId}`;
+    }
+
+    function editPost(postId) {
+      window.location.href = `/posts/edit/${postId}`;
+    }
+
     function deletePost(postId) {
       if (confirm('Are you sure you want to delete this post?')) {
         fetch(`/posts/${postId}`, { method: 'DELETE' })
@@ -97,10 +105,6 @@
           })
           .catch(err => console.error('Schedule error:', err));
       }
-    }
-
-    function editPost(postId) {
-      alert('Edit feature coming soon!');
     }
   </script>
 </body>

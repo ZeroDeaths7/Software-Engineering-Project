@@ -186,7 +186,7 @@ router.get('/:postId', async (req, res) => {
       });
     }
 
-    res.render('view-post', { post });
+    res.render('view-post', { post, userId: req.session.userId });
   } catch (err) {
     console.error('Error fetching post:', err);
     res.status(500).render('error', { 
