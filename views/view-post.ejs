@@ -4,63 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMMS - <%= post.title %></title>
-  <link rel="stylesheet" href="/style.css">
-  <style>
-    .post-back-button {
-      margin-bottom: 2rem;
-    }
-
-    .post-back-button a {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #a0a0b0;
-      text-decoration: none;
-      font-size: 0.95rem;
-      transition: color 0.3s ease;
-    }
-
-    .post-back-button a:hover {
-      color: #d946ef;
-    }
-
-    .post-full .post-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      color: #a0a0b0;
-      font-size: 0.95rem;
-      flex-wrap: wrap;
-    }
-
-    .post-full .badge {
-      display: inline-block;
-      padding: 0.35rem 1rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .badge-published {
-      background: rgba(34, 197, 94, 0.2);
-      color: #22c55e;
-      border: 1px solid rgba(34, 197, 94, 0.4);
-    }
-
-    .badge-scheduled {
-      background: rgba(59, 130, 246, 0.2);
-      color: #3b82f6;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-    }
-
-    .badge-draft {
-      background: rgba(156, 163, 175, 0.2);
-      color: #9ca3af;
-      border: 1px solid rgba(156, 163, 175, 0.4);
-    }
-  </style>
+  <link rel="stylesheet" href="/style.css?v=2">
 </head>
 <body>
   <nav class="navbar">
@@ -85,11 +29,11 @@
       <header class="post-header">
         <h1><%= post.title %></h1>
         <div class="post-meta">
-          <span>📝 By <strong><%= post.username %></strong></span>
-          <span class="badge badge-<%= post.status %>"><%= post.status %></span>
-          <span>📅 <%= post.status === 'published' ? 'Published' : 'Scheduled' %> <%= new Date(post.status === 'published' ? post.published_at : post.scheduled_time).toLocaleString('en-US', { 
+          <span>By <%= post.username %></span>
+          <span>•</span>
+          <span><%= post.status === 'published' ? 'Published' : 'Scheduled' %> <%= new Date(post.status === 'published' ? post.published_at : post.scheduled_time).toLocaleDateString('en-US', { 
             year: 'numeric', 
-            month: 'short', 
+            month: 'long', 
             day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
@@ -99,7 +43,7 @@
 
       <% if (post.image_path) { %>
         <div class="post-image">
-          <img src="<%= post.image_path %>" alt="Post image for <%= post.title %>">
+          <img src="<%= post.image_path %>" alt="Post image">
         </div>
       <% } %>
 
@@ -124,20 +68,48 @@
     <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
   </footer>
 
+  <script src="/modal.js?v=6"></script>
+  <script>
+    // Client-side datetime rendering to avoid timezone parsing inconsistencies
+    (function renderDatetimes() {
+      const nodes = document.querySelectorAll('.js-datetime');
+      const opts = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+      nodes.forEach(n => {
+        const raw = n.getAttribute('data-dt') || '';
+        if (!raw) return n.textContent = '';
+
+        let dt;
+        // If stored with a space between date and time (SQLite CURRENT_TIMESTAMP like 'YYYY-MM-DD HH:MM:SS'), treat as UTC
+        if (/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:?\d{0,2}/.test(raw)) {
+          dt = new Date(raw.replace(' ', 'T') + 'Z'); // parse as UTC then convert to local
+        } else if (/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:?\d{0,2}/.test(raw)) {
+          // ISO-like with 'T' — assume it's local time (was created on client)
+          dt = new Date(raw);
+        } else {
+          dt = new Date(raw);
+        }
+
+        if (isNaN(dt.getTime())) {
+          n.textContent = raw; // fallback
+        } else {
+          n.textContent = dt.toLocaleString('en-US', opts);
+        }
+      });
+    })();
+  </script>
   <script>
     function editPost(postId) {
       window.location.href = `/posts/edit/${postId}`;
     }
 
     function deletePost(postId) {
-      if (confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      if (confirm('Are you sure you want to delete this post?')) {
         fetch(`/posts/${postId}`, { 
           method: 'DELETE' 
         })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            alert('Post deleted successfully');
             window.location.href = '/dashboard';
           } else {
             alert(data.error || 'Failed to delete post');
