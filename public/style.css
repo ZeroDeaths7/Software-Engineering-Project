@@ -1180,8 +1180,12 @@ body {
 .modal-schedule input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 .modal-schedule input[type="date"]::-webkit-calendar-picker-indicator,
 .modal-schedule input[type="time"]::-webkit-calendar-picker-indicator {
-  filter: invert(1) brightness(200%) contrast(120%);
-  opacity: 0.95;
+  filter: invert(1) brightness(200%) contrast(120%) !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: transparent !important;
 }
 
 .modal-schedule input[type="datetime-local"]:focus,
@@ -1194,46 +1198,26 @@ body {
 }
 
 /* ========== SITE-WIDE CALENDAR ICON (all inputs, not just modals) ==========
-   Add a white SVG calendar icon as background for date/time inputs
-   with hover/focus effects for better affordance. */
+   Make calendar/date/time picker icons white for visibility on dark backgrounds */
 
-input[type="datetime-local"],
-input[type="date"],
-input[type="time"] {
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 18px 18px;
-  padding-right: 44px; /* room for the icon */
-  transition: background-image 0.2s ease, box-shadow 0.2s ease;
-}
-
-/* White calendar SVG icon (percent-encoded) */
-input[type="datetime-local"],
-input[type="date"],
-input[type="time"] {
-  background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20fill='%23ffffff'%20d='M19%204h-1V2h-2v2H8V2H6v2H5c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2zm0%2014H5V9h14v9z'/%3E%3C/svg%3E");
-}
-
-/* Hover effect: change icon color to magenta for visual feedback */
-input[type="datetime-local"]:hover,
-input[type="date"]:hover,
-input[type="time"]:hover {
-  background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20fill='%23d946ef'%20d='M19%204h-1V2h-2v2H8V2H6v2H5c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2zm0%2014H5V9h14v9z'/%3E%3C/svg%3E");
-}
-
-/* Focus effect: icon changes to bright pink (#ec4899) */
-input[type="datetime-local"]:focus,
-input[type="date"]:focus,
-input[type="time"]:focus {
-  background-image: url("data:image/svg+xml;utf8,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%3E%3Cpath%20fill='%23ec4899'%20d='M19%204h-1V2h-2v2H8V2H6v2H5c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2zm0%2014H5V9h14v9z'/%3E%3C/svg%3E");
-}
-
-/* Hide the native picker indicator so our SVG is the only visible icon */
+/* Make the native picker indicator white and visible - this is the primary calendar icon */
 input[type="datetime-local"]::-webkit-calendar-picker-indicator,
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
-  opacity: 0;
-  pointer-events: none;
+  filter: invert(1) brightness(200%) contrast(120%) !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  /* Make the icon larger and easier to see */
+  width: 20px !important;
+  height: 20px !important;
+  background-color: transparent !important;
+}
+
+/* For Firefox and other browsers, ensure proper color scheme */
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"] {
+  color-scheme: dark !important;
 }
 
 /* Styling for cross-browser compatibility */

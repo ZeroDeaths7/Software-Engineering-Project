@@ -97,6 +97,27 @@
       });
     })();
 
+    // Auto-refresh to check for status changes (scheduled -> published)
+    // Poll every 10 seconds to keep the page responsive and in sync with server scheduler
+    let refreshInterval;
+    function startAutoRefresh() {
+      // Clear any existing interval
+      if (refreshInterval) clearInterval(refreshInterval);
+      
+      refreshInterval = setInterval(() => {
+        // Silently reload the page to check for status updates
+        location.reload();
+      }, 10000); // 10 seconds - matches server scheduler frequency
+    }
+
+    // Start auto-refresh when page loads
+    window.addEventListener('load', startAutoRefresh);
+
+    // Clear interval when user navigates away
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) clearInterval(refreshInterval);
+    });
+
     function editPost(postId) {
       window.location.href = `/posts/edit/${postId}`;
     }

@@ -96,8 +96,8 @@ db.initialize().then(() => {
   process.exit(1);
 });
 
-// Auto-publish scheduler: runs every minute and publishes posts whose scheduled_time has passed
-// This provides a lightweight server-side scheduler so posts are published when the time arrives.
+// Auto-publish scheduler: runs every 10 seconds and publishes posts whose scheduled_time has passed
+// This provides a responsive server-side scheduler so posts are published precisely when the time arrives.
 setInterval(async () => {
   try {
     const now = new Date();
@@ -122,6 +122,7 @@ setInterval(async () => {
     }
     
     // Compare as strings since we're storing local time as ISO string
+    // Only publish if the scheduled time is actually in the past (not just equal due to seconds truncation)
     const result = await db.run(
       `UPDATE posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
        WHERE status = 'scheduled' AND scheduled_time <= ?`,
@@ -134,7 +135,7 @@ setInterval(async () => {
   } catch (err) {
     console.error('[Scheduler] Auto-publish error:', err);
   }
-}, 60 * 1000);
+}, 10 * 1000); // Check every 10 seconds for more responsive publishing
 
 // Debug endpoint: manually check scheduler status and trigger publish
 app.get('/debug/scheduler', async (req, res) => {

@@ -92,5 +92,27 @@
   <footer class="footer">
     <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
   </footer>
+
+  <script>
+    // Auto-refresh dashboard stats to reflect scheduled->published changes
+    // Poll every 30 seconds to keep stats current
+    let refreshInterval;
+    function startAutoRefresh() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      
+      refreshInterval = setInterval(() => {
+        // Silently reload the page to update stats
+        location.reload();
+      }, 30000); // 30 seconds
+    }
+
+    // Start auto-refresh when page loads
+    window.addEventListener('load', startAutoRefresh);
+
+    // Clear interval when user navigates away
+    window.addEventListener('beforeunload', () => {
+      if (refreshInterval) clearInterval(refreshInterval);
+    });
+  </script>
 </body>
 </html>
