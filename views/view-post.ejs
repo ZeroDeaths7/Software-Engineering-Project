@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - <%= post.title %></title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/posts/drafts">Drafts</a></li>
+        <li><a href="/posts/scheduled">Scheduled</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <article class="post-full">
+      <header class="post-header">
+        <h1><%= post.title %></h1>
+        <div class="post-meta">
+          <span>By <%= post.username %></span>
+          <span>•</span>
+          <span><%= post.status === 'published' ? 'Published' : 'Scheduled' %> <%= new Date(post.status === 'published' ? post.published_at : post.scheduled_time).toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) %></span>
+        </div>
+      </header>
+
+      <% if (post.image_path) { %>
+        <div class="post-image">
+          <img src="<%= post.image_path %>" alt="Post image">
+        </div>
+      <% } %>
+
+      <div class="post-content">
+        <%= post.content %>
+      </div>
+
+      <% if (post.user_id === locals.userId) { %>
+        <div class="post-actions">
+          <% if (post.status !== 'published') { %>
+            <button class="btn" onclick="editPost('<%= post.id %>')">Edit</button>
+            <button class="btn btn-danger" onclick="deletePost('<%= post.id %>')">Delete</button>
+          <% } %>
+        </div>
+      <% } %>
+    </article>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script>
+    function editPost(postId) {
+      window.location.href = `/posts/edit/${postId}`;
+    }
+
+    function deletePost(postId) {
+      if (confirm('Are you sure you want to delete this post?')) {
+        fetch(`/posts/${postId}`, { 
+          method: 'DELETE' 
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = '/dashboard';
+          } else {
+            alert(data.error || 'Failed to delete post');
+          }
+        })
+        .catch(err => {
+          console.error('Error:', err);
+          alert('Failed to delete post');
+        });
+      }
+    }
+  </script>
+</body>
+</html>

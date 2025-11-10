@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Dashboard</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/posts/drafts">Drafts</a></li>
+        <li><a href="/posts/scheduled">Posts</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <% if (isAdmin) { %>
+          <li><a href="/admin">Admin Panel</a></li>
+        <% } %>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
+      <p>Welcome, <strong><%= userEmail %></strong></p>
+    </div>
+
+    <% if (created) { %>
+      <div class="alert alert-success">
+        ✓ Post created successfully!
+      </div>
+    <% } %>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3><%= userStats.totalPosts %></h3>
+        <p>Total Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= userStats.publishedPosts %></h3>
+        <p>Published</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= userStats.scheduledPosts %></h3>
+        <p>Scheduled</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= userStats.draftPosts %></h3>
+        <p>Drafts</p>
+      </div>
+    </div>
+
+    <div class="dashboard-menu">
+      <h2>Quick Actions</h2>
+      <div class="menu-grid">
+        <a href="/posts/create" class="menu-item">
+          <div class="menu-icon">✏️</div>
+          <h3>Create Post</h3>
+          <p>Write and create a new post</p>
+        </a>
+        <a href="/posts/drafts" class="menu-item">
+          <div class="menu-icon">📝</div>
+          <h3>Draft Posts</h3>
+          <p>View and manage drafts</p>
+        </a>
+        <a href="/posts/scheduled" class="menu-item">
+          <div class="menu-icon">📅</div>
+          <h3>Scheduled Posts</h3>
+          <p>Manage scheduled & published posts</p>
+        </a>
+        <a href="/analytics" class="menu-item">
+          <div class="menu-icon">📊</div>
+          <h3>Analytics</h3>
+          <p>View your post statistics</p>
+        </a>
+        <% if (isAdmin) { %>
+          <a href="/admin" class="menu-item">
+            <div class="menu-icon">🔧</div>
+            <h3>Admin Panel</h3>
+            <p>Manage users and system settings</p>
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,113 +1,57 @@
-name: CI/CD Pipeline
+name: CI (pytest integration)
 
 on:
   push:
-    branches: [ main, develop, 'feature/**' ]
+    branches: [ main, master, Website_Making ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, master ]
 
 jobs:
-  build:
-    name: Build
+  pytest_integration:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+        node-version: [18.x]
+        python-version: ['3.11']
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install Node dependencies
         run: npm ci
 
-      - name: Check Node and npm versions
+      - name: Start server in background
+        env:
+          PORT: 3000
         run: |
-          node --version
-          npm --version
+          # Start the Node app in the background and save its PID
+          npm start &> server.log & echo $! > server.pid
+          # Wait for the HTTP endpoint to be available
+          npx wait-on http://localhost:3000
 
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
-          node-version: 18.x
-          cache: 'npm'
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install Python test deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest requests; fi
 
-      - name: Run unit tests
-        run: npm test
+      - name: Run pytest
+        run: pytest -q
 
-      - name: Run integration tests
-        run: npm run test:integration
-
-      - name: Generate coverage report
-        run: npm run test:coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-
-  lint:
-    name: Lint & Style
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check for syntax errors
-        run: npm run test -- --bail
-
-  security:
-    name: Security Checks
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate || true
-
-      - name: Check for vulnerable dependencies
-        run: npx snyk test --severity-threshold=high || true
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
+          echo "==== server.log ===="
+          tail -n +1 server.log || true

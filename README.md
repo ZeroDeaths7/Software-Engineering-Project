@@ -1,353 +1,315 @@
 # Social Media Management System (SMMS)
 
-## Overview
+A complete web application for managing and scheduling social media posts with role-based access control.
 
-A scalable web application for user registration, authentication, post creation/scheduling, and basic analytics. Built with Node.js, Express, SQLite, and Jest.
+## Project Information
 
-**Status**: 🎯 Base skeleton - Ready for feature development
+**Version:** 1.0.0  
+**Authors:** Mevin Jose, Prateek Meher, K Abhiram, K Rajeev  
+**Date:** November 2025  
+**Status:** Draft / For Review
 
-## Tech Stack
+## Features Implemented
 
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| **Runtime** | Node.js | 14+ |
-| **Framework** | Express.js | 4.18+ |
-| **Database** | SQLite3 | 5.1+ |
-| **Authentication** | JWT | 9.0+ |
-| **Security** | bcryptjs, Helmet | Latest |
-| **Testing** | Jest | 29+ |
-| **Rate Limiting** | express-rate-limit | 6.7+ |
+### Authentication & Authorization (SMMS-F-001, F-002, F-004)
+- ✅ User registration with email and password
+- ✅ Secure login with session management
+- ✅ Password hashing using bcrypt
+- ✅ Role-based access control (Admin/User)
+- ✅ Session timeout (15 minutes of inactivity)
+
+### Post Management (SMMS-F-005, F-006, F-007, F-012)
+- ✅ Create posts with text content
+- ✅ Optional image upload with validation
+- ✅ Save posts as drafts
+- ✅ Edit and delete scheduled/draft posts
+- ✅ Published posts cannot be edited/deleted
+
+### Scheduling (SMMS-F-008, F-009)
+- ✅ Schedule posts for future date/time
+- ✅ Auto-publish functionality (manual trigger)
+- ✅ Automatic status updates from scheduled to published
+
+### Dashboard & Viewing (SMMS-F-010, F-011)
+- ✅ User dashboard with quick actions
+- ✅ View scheduled posts with date/time
+- ✅ View published posts
+- ✅ View draft posts
+
+### Analytics (SMMS-F-013)
+- ✅ Total post count
+- ✅ Published post count
+- ✅ Scheduled post count
+- ✅ Draft post count
+- ✅ Monthly activity breakdown
+
+### Admin Features (SMMS-F-014)
+- ✅ View all users
+- ✅ Deactivate/activate user accounts
+- ✅ Promote users to admin
+- ✅ Demote admins to users
+- ✅ Manual auto-publish trigger
+- ✅ System statistics dashboard
+
+### Security Requirements
+- ✅ SMMS-SR-001: Password hashing with bcrypt
+- ✅ SMMS-SR-002: Session timeout (15 minutes)
+- ✅ SMMS-SR-003: Input validation & XSS prevention
+- ✅ SMMS-SR-004: Role-based authorization
+- ✅ SMMS-SR-005: SQL injection prevention
+
+## Technology Stack
+
+**Backend:**
+- Node.js
+- Express.js (4.18.2)
+- SQLite3
+- bcrypt for password hashing
+- express-session for session management
+- EJS for server-side templating
+- express-validator for input validation
+
+**Frontend:**
+- HTML5
+- CSS3 (responsive design)
+- Vanilla JavaScript (no frameworks)
+
+**Database:**
+- SQLite
 
 ## Project Structure
 
 ```
-SMMS/
-├── .github/
-│   └── workflows/
-│       └── ci.yml                 # CI/CD pipeline configuration
-├── src/
-│   ├── config/
-│   │   └── database.js            # SQLite connection
-│   ├── controllers/               # Business logic
-│   ├── middleware/                # Custom middleware
-│   ├── models/                    # Database models
-│   ├── routes/
-│   │   └── health.js              # Health check route
-│   ├── utils/                     # Utility functions
-│   ├── app.js                     # Express app setup
-│   └── index.js                   # Server entry point
-├── tests/
-│   ├── setup.js                   # Jest configuration
-│   └── health.integration.test.js # Sample integration test
-├── db/
-│   └── smms.db                    # SQLite database (auto-created)
-├── .env                           # Environment variables
-├── .env.example                   # Example environment file
-├── .gitignore                     # Git ignore rules
-├── package.json                   # Dependencies and scripts
-├── jest.config.js                 # Jest configuration
-└── README.md                      # This file
+software-engineering-project/
+├── server.js                 # Main Express application
+├── database.js              # Database initialization and utilities
+├── package.json             # Project dependencies
+├── README.md                # This file
+├── .gitignore              # Git ignore rules
+├── routes/
+│   ├── auth.js             # Authentication routes
+│   ├── posts.js            # Post management routes
+│   ├── admin.js            # Admin-only routes
+│   ├── dashboard.js        # Dashboard routes
+│   └── analytics.js        # Analytics routes
+├── views/
+│   ├── login.ejs           # Login page
+│   ├── register.ejs        # Registration page
+│   ├── dashboard.ejs       # User dashboard
+│   ├── create-post.ejs     # Post creation form
+│   ├── draft-posts.ejs     # Draft posts list
+│   ├── scheduled-posts.ejs # Scheduled/published posts list
+│   ├── analytics.ejs       # Analytics dashboard
+│   ├── admin-dashboard.ejs # Admin panel
+│   ├── error.ejs           # Error page
+├── public/
+│   ├── style.css           # Main stylesheet
+│   └── uploads/            # User uploaded images
+└── smms.db                 # SQLite database (auto-generated)
 ```
 
-## Installation
+## Installation & Setup
 
 ### Prerequisites
+- Node.js (v14+)
+- npm (v6+)
 
-- Node.js v14 or higher
-- npm v6 or higher
-- Git
+### Steps
 
-### Setup
-
-1. **Clone the repository**
+1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd Software-Engineering-Project
+   cd c:\Users\mjeni\OneDrive\Desktop\Software-Engineering-Project
    ```
 
-2. **Install dependencies**
+2. **Install dependencies:**
    ```bash
    npm install
    ```
 
-3. **Configure environment**
+3. **Create public/uploads directory:**
    ```bash
-   cp .env.example .env
-   # Edit .env with your settings
+   mkdir public/uploads
    ```
 
-4. **Verify setup**
+4. **Start the application:**
    ```bash
-   npm run test
+   npm start
+   ```
+   Or for development with auto-reload:
+   ```bash
+   npm run dev
    ```
 
-## Running the Application
+5. **Access the application:**
+   - Open your browser and navigate to: `http://localhost:3000`
+   - You will be redirected to the login page
 
-### Development Mode
-```bash
-npm run dev
-```
-- Starts server with nodemon (auto-restart on file changes)
-- Server runs on `http://localhost:5000`
+## Demo Credentials
 
-### Production Mode
-```bash
-npm start
-```
+**Admin Account:**
+- Email: `admin@smms.local`
+- Password: `admin123`
+
+## User Guide
+
+### For Regular Users
+
+1. **Register:** Click "Register here" on the login page
+2. **Create Post:** Navigate to "Create Post" and fill in the form
+3. **Save Draft:** Submit with "Save as Draft" button
+4. **Schedule Post:** Move posts to "Posts" section and set schedule time
+5. **View Analytics:** Check your post statistics in "Analytics"
+
+### For Admins
+
+1. **Access Admin Panel:** Click "Admin Panel" in the navigation
+2. **Manage Users:** View, deactivate, or promote users
+3. **Auto-Publish:** Click "Auto-Publish Scheduled Posts" to publish ready posts
+4. **System Stats:** View overall system statistics
 
 ## API Endpoints
 
-### Base Endpoints
+### Authentication
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login user
+- `GET /auth/logout` - Logout user
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Welcome message and endpoints list |
-| `GET` | `/api/health` | Server health check |
+### Posts
+- `GET /posts/create` - Create post form
+- `POST /posts/create` - Submit new post
+- `GET /posts/drafts` - View draft posts
+- `GET /posts/scheduled` - View scheduled/published posts
+- `POST /posts/schedule` - Schedule a post
+- `POST /posts/publish` - Manually publish a post
+- `POST /posts/edit/:postId` - Edit a post
+- `DELETE /posts/:postId` - Delete a post
+- `POST /posts/auto-publish` - Auto-publish scheduled posts
 
-### Response Examples
+### Admin
+- `GET /admin` - Admin dashboard
+- `POST /admin/deactivate/:userId` - Deactivate user
+- `POST /admin/activate/:userId` - Activate user
+- `POST /admin/promote/:userId` - Promote to admin
+- `POST /admin/demote/:userId` - Demote from admin
+- `POST /admin/publish-scheduled` - Auto-publish posts
 
-**GET /api/health** (200 OK)
-```json
-{
-  "status": "OK",
-  "timestamp": "2025-11-10T12:30:45.123Z",
-  "uptime": 123.456,
-  "environment": "development",
-  "version": "1.0.0"
-}
-```
+### Dashboard & Analytics
+- `GET /dashboard` - User dashboard
+- `GET /analytics` - Analytics dashboard
 
-**GET /** (200 OK)
-```json
-{
-  "message": "Welcome to SMMS (Social Media Management System)",
-  "version": "1.0.0",
-  "endpoints": {
-    "health": "/api/health",
-    "auth": "/api/auth",
-    "posts": "/api/posts",
-    "users": "/api/users",
-    "analytics": "/api/analytics"
-  }
-}
-```
+## Security Considerations
+
+1. **Password Security:** All passwords are hashed using bcrypt with a cost factor of 10
+2. **Session Security:** Sessions are HTTP-only and expire after 15 minutes of inactivity
+3. **Input Validation:** All user inputs are validated and escaped to prevent XSS
+4. **SQL Injection Prevention:** Using parameterized queries throughout
+5. **CSRF Protection:** Session tokens are used for state management
+6. **File Upload Security:** Only image files are allowed, with size limits
+
+## Database Schema
+
+### Users Table
+- `id` - Primary key
+- `email` - Unique email address
+- `password_hash` - Hashed password
+- `role` - 'admin' or 'user'
+- `is_active` - Account status
+- `created_at` - Registration timestamp
+- `updated_at` - Last update timestamp
+
+### Posts Table
+- `id` - Primary key
+- `user_id` - Foreign key to users
+- `title` - Post title (optional)
+- `content` - Post content
+- `image_path` - Path to uploaded image
+- `status` - 'draft', 'scheduled', or 'published'
+- `scheduled_time` - Scheduled publication time
+- `published_at` - Actual publication time
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
 
 ## Testing
 
-### Run All Tests
-```bash
-npm test
-```
+### Manual Testing Checklist
 
-### Run Tests in Watch Mode
-```bash
-npm run test:watch
-```
+**Authentication:**
+- [ ] Register new user with valid email and password
+- [ ] Login with incorrect credentials (should fail)
+- [ ] Login with correct credentials (should succeed)
+- [ ] Verify session timeout after 15 minutes
+- [ ] Logout and verify redirect to login
 
-### Run Integration Tests Only
-```bash
-npm run test:integration
-```
+**Posts:**
+- [ ] Create post with text only
+- [ ] Create post with image upload
+- [ ] Save post as draft
+- [ ] Schedule post for future date
+- [ ] Edit draft post
+- [ ] Delete draft post
+- [ ] Cannot edit published post
 
-### Generate Coverage Report
-```bash
-npm run test:coverage
-```
+**Admin:**
+- [ ] Access admin panel (admin only)
+- [ ] Deactivate user account
+- [ ] Activate deactivated user
+- [ ] Promote user to admin
+- [ ] Demote admin to user
+- [ ] Auto-publish scheduled posts
 
-## CI/CD Pipeline
+**Analytics:**
+- [ ] View post statistics
+- [ ] Verify correct counts
+- [ ] Check monthly breakdown
 
-The GitHub Actions workflow (`.github/workflows/ci.yml`) includes:
+## Performance Considerations
 
-1. **Build Stage**
-   - Checkout code
-   - Setup Node.js (16.x, 18.x, 20.x)
-   - Install dependencies
+- Database queries are optimized with proper indexing
+- File uploads are limited to 5MB
+- Sessions are stored in memory (can be upgraded to Redis for production)
+- Static assets are cached through browser caching
 
-2. **Test Stage**
-   - Run unit tests
-   - Run integration tests
-   - Generate coverage reports
-   - Upload to Codecov
+## Future Enhancements
 
-3. **Lint Stage**
-   - Check for syntax errors
-
-4. **Security Stage**
-   - Run npm audit
-   - Check for vulnerable dependencies with Snyk
-
-### Pipeline Triggers
-- Push to `main`, `develop`, or `feature/**` branches
-- Pull requests to `main` or `develop`
-
-## Security Features
-
-### Implemented
-- ✅ Helmet.js for security headers
-- ✅ CORS configuration
-- ✅ Request body size limits
-- ✅ Environment variable management
-- ✅ Error handling without stack traces in production
-
-### Planned (Feature Branches)
-- 🔒 JWT authentication (SMMS-F-002)
-- 🔒 Password hashing with bcrypt (SMMS-SR-001)
-- 🔒 SQL injection prevention (SMMS-SR-002)
-- 🔒 Input validation (SMMS-SR-003)
-- 🔒 Rate limiting on auth endpoints (SMMS-SR-005)
-
-## Environment Variables
-
-```env
-# Server Configuration
-PORT=5000
-NODE_ENV=development
-
-# Database
-DATABASE_PATH=./db/smms.db
-
-# Authentication (JWT)
-JWT_SECRET=your_super_secret_key_here
-JWT_EXPIRES_IN=3600
-
-# CORS
-FRONTEND_URL=http://localhost:3000
-
-# Logging
-LOG_LEVEL=debug
-```
-
-## Development Workflow
-
-### Feature Branch Pattern
-
-1. **Create feature branch**
-   ```bash
-   git checkout -b feature/SMMS-XXX-description
-   ```
-
-2. **Make changes and commit**
-   ```bash
-   git add .
-   git commit -m "Feat: Add new feature (SMMS-XXX)"
-   ```
-
-3. **Push and create PR**
-   ```bash
-   git push -u origin feature/SMMS-XXX-description
-   ```
-
-4. **PR Checks**
-   - ✅ All CI/CD tests must pass
-   - ✅ Code coverage maintained
-   - ✅ Peer review approval required
-
-5. **Merge to main**
-   - Use "Squash and merge" for cleaner history
-
-## Git Workflow
-
-### Branches
-
-- `main` - Production-ready code
-- `develop` - Development branch (for future use)
-- `feature/*` - Feature branches (SMMS-XXX-description)
-- `bugfix/*` - Bug fix branches
-- `Deployment` - Deployment branch
-
-### Commit Messages
-
-Follow this format:
-```
-Feat: Short description of feature (SMMS-XXX)
-Fix: Short description of fix (SMMS-XXX)
-Test: Short description of test (SMMS-XXX)
-Docs: Short description of documentation
-Chore: Short description of chore
-```
-
-## Requirements Coverage
-
-### SMMS-F-001: User Registration
-- Route placeholder: `/api/auth/register`
-- Awaiting feature implementation on feature branch
-
-### SMMS-F-002: User Login
-- Route placeholder: `/api/auth/login`
-- Awaiting feature implementation on feature branch
-- Security requirements: SMMS-SR-001, SMMS-SR-002, SMMS-SR-003
-
-### SMMS-F-003: Post Creation
-- Route placeholder: `/api/posts`
-- Awaiting feature implementation on feature branch
-
-### Future Features
-- Post scheduling
-- Analytics dashboard
-- User management (Admin)
-- Content moderation
-
-## Testing Strategy
-
-### Unit Tests
-- Test individual functions and methods
-- Mock external dependencies
-- Located in `tests/` or co-located with source
-
-### Integration Tests
-- Test API endpoints
-- Test interactions between modules
-- Use real database (in-memory for tests)
-
-### System Tests
-- End-to-end testing
-- Full workflow validation
-- Planned for later stages
+- [ ] Real social media API integration
+- [ ] Advanced analytics with engagement metrics
+- [ ] Post templates
+- [ ] Bulk post scheduling
+- [ ] Email notifications
+- [ ] Two-factor authentication
+- [ ] OAuth integration
+- [ ] Database backup automation
+- [ ] Post preview before publishing
+- [ ] Collaborative features
 
 ## Troubleshooting
 
-### Port Already in Use
-```bash
-# Find process on port 5000
-lsof -i :5000
-# Kill process
-kill -9 <PID>
-```
+### Database errors
+- Delete `smms.db` and restart the application to reset database
+- Ensure the `public/uploads` directory exists and is writable
 
-### Database Issues
-```bash
-# Remove old database and recreate
-rm db/smms.db
-npm start
-```
+### Session timeout issues
+- Clear browser cookies
+- Check system time is correct
+- Verify session timeout setting in `server.js`
 
-### Node Modules Issues
-```bash
-# Clean install
-rm -rf node_modules package-lock.json
-npm install
-```
+### File upload errors
+- Ensure `public/uploads` directory has write permissions
+- Check file size is under 5MB
+- Verify file type is an image
 
-## Contributing
+## Support & Contact
 
-1. Create a feature branch
-2. Write tests for your changes
-3. Ensure all tests pass: `npm test`
-4. Commit with descriptive messages
-5. Push and create a PR
-6. Wait for CI/CD checks and reviews
-7. Merge after approval
+For issues or questions, please refer to the Software Test Plan (STP) documentation included with this project.
 
 ## License
 
-ISC
+MIT License - See LICENSE file for details
 
-## Contact
+## Version History
 
-For questions or issues, please create a GitHub issue.
-
----
-
-**Last Updated**: November 10, 2025  
-**Version**: 1.0.0  
-**Status**: Base skeleton ready for feature development
+**v1.0.0 (November 2025)**
+- Initial release with all core features
+- Complete security implementation
+- Full admin panel
+- Analytics dashboard

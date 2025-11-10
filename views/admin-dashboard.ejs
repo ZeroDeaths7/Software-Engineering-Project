@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Admin Panel</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/admin">Admin Panel</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Admin Panel</h1>
+      <button class="btn btn-primary" onclick="autoPublishPosts()">
+        Auto-Publish Scheduled Posts
+      </button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3><%= stats.totalUsers %></h3>
+        <p>Total Users</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.adminCount %></h3>
+        <p>Admins</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.totalPosts %></h3>
+        <p>Total Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.publishedPosts %></h3>
+        <p>Published Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.scheduledPosts %></h3>
+        <p>Scheduled Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.draftPosts %></h3>
+        <p>Draft Posts</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>User Management</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(user => { %>
+            <tr>
+              <td><%= user.email %></td>
+              <td>
+                <span class="badge badge-<%= user.role %>">
+                  <%= user.role.toUpperCase() %>
+                </span>
+              </td>
+              <td>
+                <span class="badge <%= user.is_active ? 'badge-active' : 'badge-inactive' %>">
+                  <%= user.is_active ? 'ACTIVE' : 'INACTIVE' %>
+                </span>
+              </td>
+              <td><%= new Date(user.created_at).toLocaleDateString() %></td>
+              <td>
+                <% if (!user.is_active) { %>
+                  <button class="btn btn-small" onclick="activateUser('<%= user.id %>')">
+                    Activate
+                  </button>
+                <% } else { %>
+                  <button class="btn btn-small btn-danger" onclick="deactivateUser('<%= user.id %>')">
+                    Deactivate
+                  </button>
+                <% } %>
+
+                <% if (user.role === 'user') { %>
+                  <button class="btn btn-small" onclick="promoteUser('<%= user.id %>')">
+                    Make Admin
+                  </button>
+                <% } else { %>
+                  <button class="btn btn-small" onclick="demoteUser('<%= user.id %>')">
+                    Remove Admin
+                  </button>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script>
+    function deactivateUser(userId) {
+      if (confirm('Are you sure you want to deactivate this user?')) {
+        fetch('/admin/deactivate/' + userId, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message || data.error);
+            location.reload();
+          })
+          .catch(err => console.error('Error:', err));
+      }
+    }
+
+    function activateUser(userId) {
+      if (confirm('Are you sure you want to activate this user?')) {
+        fetch('/admin/activate/' + userId, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message || data.error);
+            location.reload();
+          })
+          .catch(err => console.error('Error:', err));
+      }
+    }
+
+    function promoteUser(userId) {
+      if (confirm('Are you sure you want to promote this user to admin?')) {
+        fetch('/admin/promote/' + userId, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message || data.error);
+            location.reload();
+          })
+          .catch(err => console.error('Error:', err));
+      }
+    }
+
+    function demoteUser(userId) {
+      if (confirm('Are you sure you want to demote this admin to user?')) {
+        fetch('/admin/demote/' + userId, { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message || data.error);
+            location.reload();
+          })
+          .catch(err => console.error('Error:', err));
+      }
+    }
+
+    function autoPublishPosts() {
+      if (confirm('Auto-publish all scheduled posts?')) {
+        fetch('/admin/publish-scheduled', { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            alert(data.message || data.error);
+            location.reload();
+          })
+          .catch(err => console.error('Error:', err));
+      }
+    }
+  </script>
+</body>
+</html>

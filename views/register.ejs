@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Register</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1>Social Media Management System</h1>
+      <h2>Create Account</h2>
+
+      <% if (errors && errors.length > 0) { %>
+        <div class="alert alert-error">
+          <% errors.forEach(error => { %>
+            <p><%= error.msg %></p>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <form method="POST" action="/auth/register" class="auth-form">
+        <div class="form-group">
+          <label for="email">Email Address:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="your@email.com"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password:</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            placeholder="At least 6 characters (letters & numbers)"
+          >
+          <small>Must contain letters and numbers</small>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password:</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+            placeholder="Re-enter your password"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary">Register</button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a href="/auth/login">Login here</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
