@@ -146,7 +146,8 @@ body {
 }
 
 .btn-danger:hover {
-  background-color: #c0392b;
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+  transform: translateY(-2px);
 }
 
 .btn-small {
@@ -968,7 +969,7 @@ body {
   bottom: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 1);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 9999 !important;
@@ -992,49 +993,47 @@ body {
 }
 
 .modal-content {
-  background: linear-gradient(135deg, rgba(30, 30, 50, 0.98) 0%, rgba(40, 40, 60, 0.98) 100%);
+  background: linear-gradient(145deg, #1e1e3a 0%, #2a2a4a 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 2.5rem;
-  max-width: 550px;
+  max-width: 500px;
   width: 90%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 0 0 60px rgba(138, 43, 226, 0.3), inset 0 0 80px rgba(138, 43, 226, 0.15);
-  border: 2px solid rgba(138, 43, 226, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(157, 78, 221, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 2px solid #9d4edd;
   animation: slideIn 0.4s ease;
   z-index: 10000 !important;
   flex-shrink: 0;
   position: relative;
-  /* Subtle themed background glow behind content */
-  background-image: 
-    linear-gradient(135deg, rgba(138, 43, 226, 0.08) 0%, rgba(217, 70, 239, 0.08) 100%),
-    linear-gradient(135deg, rgba(30, 30, 50, 0.98) 0%, rgba(40, 40, 60, 0.98) 100%);
-  background-blend-mode: screen;
 }
 
 .modal-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   text-align: center;
 }
 
 .modal-header h2 {
-  background: linear-gradient(135deg, #8a2be2 0%, #d946ef 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 2rem;
+  color: #fff;
+  font-size: 1.75rem;
   margin: 0;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(157, 78, 221, 0.5);
 }
 
 .modal-body {
-  margin-bottom: 2rem;
-  color: #c0c0d0;
+  margin: 1.5rem 0;
+  color: #d0d0e0;
   line-height: 1.6;
   font-size: 1rem;
+}
+
+.modal-body p {
+  margin: 0;
+  opacity: 0.95;
 }
 
 .modal-footer {
@@ -1042,12 +1041,68 @@ body {
   gap: 1rem;
   justify-content: center;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(138, 43, 226, 0.2);
+  border-top: 1px solid rgba(157, 78, 221, 0.2);
   flex-wrap: wrap;
 }
 
 .modal-footer .btn {
   min-width: 120px;
+  padding: 0.85rem 2.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: none;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-footer .btn:active {
+  transform: scale(0.97);
+}
+
+.modal-footer .btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8e8f0;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+}
+
+.modal-footer .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(157, 78, 221, 0.2);
+  color: #fff;
+}
+
+.modal-footer .btn-secondary:active {
+  transform: translateY(-1px) scale(0.98);
+}
+
+.modal-footer .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+  color: #fff;
+  border: 1.5px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  font-weight: 600;
+}
+
+.modal-footer .btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6), 0 0 20px rgba(220, 38, 38, 0.4);
+  border-color: rgba(239, 68, 68, 0.8);
+}
+
+.modal-footer .btn-danger:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5);
   padding: 0.9rem 1.8rem;
   font-weight: 600;
   border-radius: 8px;
@@ -1390,7 +1445,7 @@ input[type="datetime-local"] {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  background: rgba(0,0,0,0.8) !important;
+  background: rgba(0,0,0,0.95) !important;
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   z-index: 99999 !important;
@@ -1416,27 +1471,109 @@ input[type="datetime-local"] {
 
 /* Ensure there's a solid, opaque panel behind modal text so the underlying page cannot show through */
 .modal-content {
-  position: relative; /* needed for pseudo-element */
-  overflow: hidden !important;
+  position: relative !important;
+  background: linear-gradient(145deg, #1e1e3a 0%, #2a2a4a 100%) !important;
+  border: 2px solid #9d4edd !important;
+  border-radius: 20px !important;
+  padding: 2.5rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(157, 78, 221, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  max-width: 500px !important;
 }
 
-.modal-content::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(6,6,10,0.92) 0%, rgba(18,18,30,0.86) 100%) !important;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 0;
-  border-radius: 16px;
-  pointer-events: none;
-}
-
-/* Put actual content above the opaque panel */
+/* Put actual content above any background effects */
 .modal-header,
 .modal-body,
 .modal-footer {
   position: relative;
   z-index: 1;
+}
+
+.modal-header h2 {
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+  margin: 0 0 0.5rem 0 !important;
+  letter-spacing: 0.5px !important;
+  text-shadow: 0 2px 10px rgba(157, 78, 221, 0.5) !important;
+}
+
+.modal-body {
+  color: #d0d0e0 !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+  margin: 1.5rem 0 !important;
+}
+
+.modal-body p {
+  margin: 0 !important;
+  opacity: 0.95 !important;
+}
+
+.modal-footer {
+  display: flex !important;
+  gap: 1rem !important;
+  justify-content: center !important;
+  padding-top: 1.5rem !important;
+  border-top: 1px solid rgba(157, 78, 221, 0.2) !important;
+}
+
+.modal-footer .btn {
+  padding: 0.85rem 2.25rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  min-width: 120px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  outline: none !important;
+  user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.modal-footer .btn:active {
+  transform: scale(0.97) !important;
+}
+
+.modal-footer .btn-secondary {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e8e8f0 !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.modal-footer .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(157, 78, 221, 0.2) !important;
+  color: #fff !important;
+}
+
+.modal-footer .btn-secondary:active {
+  transform: translateY(-1px) scale(0.98) !important;
+}
+
+.modal-footer .btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%) !important;
+  color: #fff !important;
+  border: 1.5px solid rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+  font-weight: 600 !important;
+}
+
+.modal-footer .btn-danger:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.6), 0 0 20px rgba(220, 38, 38, 0.4) !important;
+  border-color: rgba(239, 68, 68, 0.8) !important;
+}
+
+.modal-footer .btn-danger:active {
+  transform: translateY(-1px) scale(0.98) !important;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5) !important;
 }
 

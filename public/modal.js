@@ -22,7 +22,7 @@ function initializeModal() {
   overlay.id = 'modal-overlay';
   overlay.className = 'modal-overlay';
   // enforce viewport-level positioning and centering via inline styles
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;visibility:hidden;opacity:0;pointer-events:none;z-index:99999;background:rgba(0,0,0,0.8);transition:opacity .2s ease,visibility .2s ease;';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;visibility:hidden;opacity:0;pointer-events:none;z-index:99999;background:rgba(0,0,0,0.95);transition:opacity .2s ease,visibility .2s ease;';
 
   overlay.innerHTML = `
     <div class="modal-content" id="modal-content">
@@ -41,7 +41,7 @@ function initializeModal() {
   // enforce modal content sizing so it centers reliably
   const contentEl = document.getElementById('modal-content');
   if (contentEl) {
-    contentEl.style.cssText = 'max-width:720px;width:90%;box-sizing:border-box;margin:0 auto;';
+    contentEl.style.cssText = 'max-width:500px;width:90%;box-sizing:border-box;margin:0 auto;background:linear-gradient(145deg, #1e1e3a 0%, #2a2a4a 100%);border:2px solid #9d4edd;border-radius:20px;padding:2.5rem;box-shadow:0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(157, 78, 221, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);';
   }
   console.log('[Modal] Modal overlay created successfully');
   
