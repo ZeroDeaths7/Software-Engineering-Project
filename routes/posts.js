@@ -1,15 +1,22 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const db = require('../database');
 
 const router = express.Router();
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '../public/uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../public/uploads'));
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -22,14 +29,34 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed'));
+    cb(new Error('Only JPEG, PNG, GIF, and WebP images are allowed'), false);
   }
+};
+
+// Create error handling middleware for multer
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).render('create-post', {
+        errors: [{ msg: 'File size too large. Maximum size is 5MB.' }]
+      });
+    }
+    return res.status(400).render('create-post', {
+      errors: [{ msg: `Upload error: ${err.message}` }]
+    });
+  }
+  if (err) {
+    return res.status(400).render('create-post', {
+      errors: [{ msg: err.message }]
+    });
+  }
+  next();
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
 });
 
 /**
@@ -48,6 +75,14 @@ router.get('/create', (req, res) => {
 router.post(
   '/create',
   upload.single('image'),
+  (req, res, next) => {
+    if (req.fileValidationError) {
+      return res.render('create-post', {
+        errors: [{ msg: req.fileValidationError }]
+      });
+    }
+    next();
+  },
   [
     body('title')
       .trim()
@@ -69,12 +104,18 @@ router.post(
     try {
       const { title, content, saveAs } = req.body;
       const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
-      const status = saveAs === 'draft' ? 'draft' : 'scheduled';
+      const status = saveAs === 'draft' ? 'draft' : 'published';
+
+      // Ensure the uploads directory exists
+      const uploadsDir = path.join(__dirname, '../public/uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
 
       await db.run(
-        `INSERT INTO posts (user_id, title, content, image_path, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-        [req.session.userId, title || null, content, imagePath, status]
+        `INSERT INTO posts (user_id, title, content, image_path, status, created_at, updated_at, published_at)
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CASE WHEN ? = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END)`,
+        [req.session.userId, title || null, content, imagePath, status, status]
       );
 
       res.redirect('/dashboard?created=true');
@@ -122,6 +163,34 @@ router.get('/scheduled', async (req, res) => {
     console.error('Error fetching scheduled posts:', err);
     res.status(500).render('error', {
       message: 'Failed to fetch scheduled posts.',
+    });
+  }
+});
+
+/**
+ * GET /posts/:postId - View a single post
+ */
+router.get('/:postId', async (req, res) => {
+  try {
+    const post = await db.get(
+      `SELECT posts.*, users.email as username 
+       FROM posts 
+       JOIN users ON posts.user_id = users.id 
+       WHERE posts.id = ? AND (posts.status = 'published' OR posts.user_id = ?)`,
+      [req.params.postId, req.session.userId]
+    );
+
+    if (!post) {
+      return res.status(404).render('error', { 
+        message: 'Post not found or you don\'t have permission to view it.' 
+      });
+    }
+
+    res.render('view-post', { post });
+  } catch (err) {
+    console.error('Error fetching post:', err);
+    res.status(500).render('error', { 
+      message: 'Failed to fetch post details.' 
     });
   }
 });
@@ -220,11 +289,46 @@ router.post(
 );
 
 /**
- * POST /posts/edit - Edit a post
- * SMMS-F-012: Edit scheduled posts
+ * GET /posts/edit/:postId - Display edit form
+ */
+router.get('/edit/:postId', async (req, res) => {
+  try {
+    const post = await db.get(
+      'SELECT * FROM posts WHERE id = ? AND user_id = ?',
+      [req.params.postId, req.session.userId]
+    );
+
+    if (!post) {
+      return res.status(404).render('error', { 
+        message: 'Post not found or you don\'t have permission to edit it.' 
+      });
+    }
+
+    res.render('edit-post', { errors: [], post });
+  } catch (err) {
+    console.error('Error fetching post for edit:', err);
+    res.status(500).render('error', { 
+      message: 'Failed to fetch post for editing.' 
+    });
+  }
+});
+
+/**
+ * POST /posts/edit/:postId - Save edited post
+ * SMMS-F-012: Edit posts
  */
 router.post(
   '/edit/:postId',
+  upload.single('image'),
+  (req, res, next) => {
+    if (req.fileValidationError) {
+      return res.render('edit-post', {
+        errors: [{ msg: req.fileValidationError }],
+        post: req.body
+      });
+    }
+    next();
+  },
   [
     body('title')
       .trim()
@@ -236,39 +340,96 @@ router.post(
       .isLength({ min: 1, max: 5000 })
       .withMessage('Content must be between 1 and 5000 characters.')
       .escape(),
+    body('status')
+      .isIn(['draft', 'scheduled', 'published'])
+      .withMessage('Invalid status'),
+    body('scheduledTime')
+      .custom((value, { req }) => {
+        // Only validate scheduledTime if status is 'scheduled'
+        if (req.body.status === 'scheduled') {
+          if (!value) {
+            throw new Error('Scheduled time is required when status is scheduled');
+          }
+          // Check if it's a valid date
+          const date = new Date(value);
+          if (isNaN(date.getTime())) {
+            throw new Error('Invalid scheduled time format');
+          }
+        }
+        return true;
+      }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Validation failed', errors: errors.array() });
+      const post = await db.get('SELECT * FROM posts WHERE id = ?', [req.params.postId]);
+      return res.render('edit-post', { 
+        errors: errors.array(), 
+        post: { ...post, ...req.body }
+      });
     }
 
     try {
       const { postId } = req.params;
-      const { title, content } = req.body;
+      const { title, content, status, scheduledTime, removeImage } = req.body;
 
-      // Verify post belongs to user and is not published
+      // Verify post belongs to user
       const post = await db.get(
-        'SELECT id FROM posts WHERE id = ? AND user_id = ? AND status != ?',
-        [postId, req.session.userId, 'published']
+        'SELECT * FROM posts WHERE id = ? AND user_id = ?',
+        [postId, req.session.userId]
       );
 
       if (!post) {
-        return res.status(403).json({
-          error: 'Post not found, access denied, or cannot edit published posts.',
+        return res.status(403).render('error', {
+          message: 'Post not found or access denied.',
         });
       }
 
+      // Handle image upload or removal
+      let imagePath = post.image_path;
+      if (req.file) {
+        imagePath = `/uploads/${req.file.filename}`;
+      } else if (removeImage === 'true') {
+        imagePath = null;
+      }
+
+      // Update post with new values
       await db.run(
-        `UPDATE posts SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP
+        `UPDATE posts 
+         SET title = ?, 
+             content = ?, 
+             status = ?,
+             scheduled_time = CASE 
+               WHEN ? = 'scheduled' THEN ?
+               ELSE NULL
+             END,
+             published_at = CASE 
+               WHEN ? = 'published' THEN CURRENT_TIMESTAMP
+               ELSE published_at
+             END,
+             image_path = ?,
+             updated_at = CURRENT_TIMESTAMP
          WHERE id = ?`,
-        [title || null, content, postId]
+        [
+          title || null,
+          content,
+          status,
+          status,
+          status === 'scheduled' ? scheduledTime : null,
+          status,
+          imagePath,
+          postId
+        ]
       );
 
-      res.json({ success: true, message: 'Post updated successfully.' });
+      res.redirect('/posts/scheduled?updated=true');
     } catch (err) {
       console.error('Post editing error:', err);
-      res.status(500).json({ error: 'Failed to edit post.' });
+      const post = await db.get('SELECT * FROM posts WHERE id = ?', [req.params.postId]);
+      res.render('edit-post', {
+        errors: [{ msg: 'Failed to edit post.' }],
+        post: { ...post, ...req.body }
+      });
     }
   }
 );
@@ -281,10 +442,10 @@ router.delete('/:postId', async (req, res) => {
   try {
     const { postId } = req.params;
 
-    // Verify post belongs to user and is not published
+    // Verify post belongs to user
     const post = await db.get(
-      'SELECT id FROM posts WHERE id = ? AND user_id = ? AND status != ?',
-      [postId, req.session.userId, 'published']
+      'SELECT id FROM posts WHERE id = ? AND user_id = ?',
+      [postId, req.session.userId]
     );
 
     if (!post) {
