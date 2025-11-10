@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMMS - Draft Posts</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=2">
 </head>
 <body>
   <nav class="navbar">
@@ -69,38 +69,71 @@
     <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
   </footer>
 
+  <script src="/modal.js?v=6"></script>
   <script>
+    console.log('[Page] Draft posts page loaded');
+    
     function deletePost(postId) {
-      if (confirm('Are you sure you want to delete this post?')) {
-        fetch(`/posts/${postId}`, { method: 'DELETE' })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
-          })
-          .catch(err => console.error('Delete error:', err));
-      }
+      console.log('[deletePost] Called with postId:', postId);
+      showConfirm(
+        'Delete Post',
+        'Are you sure you want to delete this post? This action cannot be undone.',
+        () => {
+          fetch(`/posts/${postId}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', 'Post deleted successfully!', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error || 'Failed to delete post', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Delete error:', err);
+              showAlert('Error', 'Failed to delete post', 'error');
+            });
+        }
+      );
     }
 
     function schedulePost(postId) {
-      const scheduledTime = prompt('Enter date and time (YYYY-MM-DDTHH:mm):');
-      if (scheduledTime) {
-        fetch('/posts/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postId, scheduledTime })
-        })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
+      console.log('[schedulePost] Called with postId:', postId);
+      showSchedule(
+        'Schedule Your Post',
+        (scheduledTime) => {
+          // scheduledTime is now in local ISO format: YYYY-MM-DDTHH:MM:SS
+          console.log('[schedulePost] Received scheduled time:', scheduledTime);
+          fetch('/posts/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              postId: parseInt(postId), 
+              scheduledTime: scheduledTime  // Send as-is, already in correct format
+            })
           })
-          .catch(err => console.error('Schedule error:', err));
-      }
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', 'Post scheduled successfully!', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.error || 'Failed to schedule post', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Schedule error:', err);
+              showAlert('Error', 'Failed to schedule post', 'error');
+            });
+        }
+      );
     }
 
     function editPost(postId) {
-      alert('Edit feature coming soon!');
+      console.log('[editPost] Called with postId:', postId);
+      window.location.href = `/posts/edit/${postId}`;
     }
   </script>
 </body>

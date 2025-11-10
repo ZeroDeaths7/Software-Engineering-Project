@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SMMS - Admin Panel</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=2">
 </head>
 <body>
   <nav class="navbar">
@@ -113,65 +113,126 @@
     <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
   </footer>
 
+  <script src="/modal.js?v=6"></script>
   <script>
     function deactivateUser(userId) {
-      if (confirm('Are you sure you want to deactivate this user?')) {
-        fetch('/admin/deactivate/' + userId, { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
-          })
-          .catch(err => console.error('Error:', err));
-      }
+      showConfirm(
+        'Deactivate User',
+        'Are you sure you want to deactivate this user? They will not be able to access the system.',
+        () => {
+          fetch('/admin/deactivate/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User deactivated successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
     }
 
     function activateUser(userId) {
-      if (confirm('Are you sure you want to activate this user?')) {
-        fetch('/admin/activate/' + userId, { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
-          })
-          .catch(err => console.error('Error:', err));
-      }
+      showConfirm(
+        'Activate User',
+        'Are you sure you want to activate this user? They will be able to access the system.',
+        () => {
+          fetch('/admin/activate/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User activated successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
     }
 
     function promoteUser(userId) {
-      if (confirm('Are you sure you want to promote this user to admin?')) {
-        fetch('/admin/promote/' + userId, { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
-          })
-          .catch(err => console.error('Error:', err));
-      }
+      showConfirm(
+        'Promote to Admin',
+        'Are you sure you want to promote this user to admin? They will have full administrative privileges.',
+        () => {
+          fetch('/admin/promote/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User promoted to admin', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
     }
 
     function demoteUser(userId) {
-      if (confirm('Are you sure you want to demote this admin to user?')) {
-        fetch('/admin/demote/' + userId, { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
-          })
-          .catch(err => console.error('Error:', err));
-      }
+      showConfirm(
+        'Remove Admin Privileges',
+        'Are you sure you want to demote this admin to a regular user? They will lose administrative privileges.',
+        () => {
+          fetch('/admin/demote/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User demoted successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
     }
 
     function autoPublishPosts() {
-      if (confirm('Auto-publish all scheduled posts?')) {
-        fetch('/admin/publish-scheduled', { method: 'POST' })
-          .then(res => res.json())
-          .then(data => {
-            alert(data.message || data.error);
-            location.reload();
-          })
-          .catch(err => console.error('Error:', err));
-      }
+      showConfirm(
+        'Auto-Publish Posts',
+        'Publish all scheduled posts that are ready? This action will immediately publish all eligible scheduled posts.',
+        () => {
+          fetch('/admin/publish-scheduled', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'Posts published successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
     }
   </script>
 </body>
