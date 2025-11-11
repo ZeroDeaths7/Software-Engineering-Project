@@ -1,6 +1,9 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const db = require('../database');
+const logger = require('../utils/logger');
+const backup = require('../utils/backup');
+const path = require('path');
 
 const router = express.Router();
 
@@ -51,11 +54,12 @@ router.post(
 
       // Prevent deactivating self
       if (parseInt(userId) === req.session.userId) {
+        logger.warn('Admin attempted to deactivate own account', { adminId: req.session.userId });
         return res.status(400).json({ error: 'Cannot deactivate your own account.' });
       }
 
-      // Prevent deactivating other admins (optional - can be removed if needed)
-      const user = await db.get('SELECT role FROM users WHERE id = ?', [userId]);
+      // Get user details
+      const user = await db.get('SELECT id, email, role FROM users WHERE id = ?', [userId]);
       if (!user) {
         return res.status(404).json({ error: 'User not found.' });
       }
@@ -66,9 +70,15 @@ router.post(
         [userId]
       );
 
+      logger.auth('User account deactivated by admin', {
+        adminId: req.session.userId,
+        targetUserId: userId,
+        targetEmail: user.email,
+      });
+
       res.json({ success: true, message: 'User account deactivated.' });
     } catch (err) {
-      console.error('Deactivation error:', err);
+      logger.error('Deactivation error', { error: err.message, adminId: req.session.userId });
       res.status(500).json({ error: 'Failed to deactivate user.' });
     }
   }
@@ -88,7 +98,7 @@ router.post(
     try {
       const { userId } = req.params;
 
-      const user = await db.get('SELECT id FROM users WHERE id = ?', [userId]);
+      const user = await db.get('SELECT id, email FROM users WHERE id = ?', [userId]);
       if (!user) {
         return res.status(404).json({ error: 'User not found.' });
       }
@@ -99,9 +109,15 @@ router.post(
         [userId]
       );
 
+      logger.auth('User account activated by admin', {
+        adminId: req.session.userId,
+        targetUserId: userId,
+        targetEmail: user.email,
+      });
+
       res.json({ success: true, message: 'User account activated.' });
     } catch (err) {
-      console.error('Activation error:', err);
+      logger.error('Activation error', { error: err.message, adminId: req.session.userId });
       res.status(500).json({ error: 'Failed to activate user.' });
     }
   }
@@ -190,19 +206,143 @@ router.post(
  */
 router.post('/publish-scheduled', async (req, res) => {
   try {
+    // Use same time format as scheduler (local time string)
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const localNow = `${pad(now.getFullYear())}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    
+    logger.info('Admin manually triggered scheduled post publishing', {
+      adminId: req.session.userId,
+      currentTime: localNow,
+    });
+
     const result = await db.run(
       `UPDATE posts SET status = 'published', published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-       WHERE status = 'scheduled' AND scheduled_time <= CURRENT_TIMESTAMP`
+       WHERE status = 'scheduled' AND scheduled_time <= ?`,
+      [localNow]
     );
+
+    logger.info('Admin manual publish completed', {
+      adminId: req.session.userId,
+      postsPublished: result.changes,
+    });
 
     res.json({
       success: true,
-      message: `${result.changes} scheduled posts have been published.`,
+      message: result.changes > 0 
+        ? `${result.changes} scheduled post${result.changes > 1 ? 's have' : ' has'} been published.`
+        : 'No posts were ready to be published.',
       postsPublished: result.changes,
     });
   } catch (err) {
-    console.error('Auto-publish error:', err);
+    logger.error('Auto-publish error', { error: err.message, adminId: req.session.userId });
     res.status(500).json({ error: 'Failed to publish scheduled posts.' });
+  }
+});
+
+/**
+ * POST /admin/backup - Create database backup
+ * SMMS-NF-005: Manual database backup
+ */
+router.post('/backup', async (req, res) => {
+  try {
+    logger.info('Database backup initiated', { adminId: req.session.userId });
+    const result = await backup.createBackup();
+
+    if (result.success) {
+      logger.info('Database backup created successfully', {
+        adminId: req.session.userId,
+        fileName: result.fileName,
+        size: result.size,
+      });
+      res.json({
+        success: true,
+        message: 'Database backup created successfully.',
+        fileName: result.fileName,
+        size: result.size,
+        timestamp: result.timestamp,
+      });
+    } else {
+      logger.error('Database backup failed', { adminId: req.session.userId, error: result.error });
+      res.status(500).json({ error: result.error || 'Failed to create backup.' });
+    }
+  } catch (err) {
+    logger.error('Backup error', { error: err.message, adminId: req.session.userId });
+    res.status(500).json({ error: 'Failed to create database backup.' });
+  }
+});
+
+/**
+ * GET /admin/backups - List all backups
+ * SMMS-NF-005: View available backups
+ */
+router.get('/backups', (req, res) => {
+  try {
+    const backups = backup.listBackups();
+    res.json({ success: true, backups });
+  } catch (err) {
+    logger.error('Error listing backups', { error: err.message });
+    res.status(500).json({ error: 'Failed to list backups.' });
+  }
+});
+
+/**
+ * GET /admin/backup/download/:fileName - Download a backup file
+ */
+router.get('/backup/download/:fileName', (req, res) => {
+  try {
+    const { fileName } = req.params;
+    const filePath = path.join(backup.BACKUP_DIR, fileName);
+
+    // Security check: ensure filename doesn't contain path traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      logger.security('Attempted path traversal in backup download', {
+        adminId: req.session.userId,
+        fileName,
+      });
+      return res.status(403).json({ error: 'Invalid file name.' });
+    }
+
+    logger.info('Backup file downloaded', { adminId: req.session.userId, fileName });
+    res.download(filePath, fileName, (err) => {
+      if (err) {
+        logger.error('Backup download error', { error: err.message, fileName });
+        res.status(404).json({ error: 'Backup file not found.' });
+      }
+    });
+  } catch (err) {
+    logger.error('Backup download error', { error: err.message });
+    res.status(500).json({ error: 'Failed to download backup.' });
+  }
+});
+
+/**
+ * DELETE /admin/backup/:fileName - Delete a backup file
+ */
+router.delete('/backup/:fileName', (req, res) => {
+  try {
+    const { fileName } = req.params;
+
+    // Security check: ensure filename doesn't contain path traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      logger.security('Attempted path traversal in backup deletion', {
+        adminId: req.session.userId,
+        fileName,
+      });
+      return res.status(403).json({ error: 'Invalid file name.' });
+    }
+
+    const result = backup.deleteBackup(fileName);
+
+    if (result.success) {
+      logger.info('Backup file deleted', { adminId: req.session.userId, fileName });
+      res.json({ success: true, message: 'Backup deleted successfully.' });
+    } else {
+      res.status(404).json({ error: result.error });
+    }
+  } catch (err) {
+    logger.error('Backup deletion error', { error: err.message });
+    res.status(500).json({ error: 'Failed to delete backup.' });
   }
 });
 

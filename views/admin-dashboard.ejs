@@ -22,9 +22,17 @@
   <div class="container">
     <div class="page-header">
       <h1>Admin Panel</h1>
-      <button class="btn btn-primary" onclick="autoPublishPosts()">
-        Auto-Publish Scheduled Posts
-      </button>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="autoPublishPosts()">
+          Auto-Publish Scheduled Posts
+        </button>
+        <button class="btn btn-success" onclick="createBackup()">
+          Create Database Backup
+        </button>
+        <button class="btn btn-secondary" onclick="viewBackups()">
+          View Backups
+        </button>
+      </div>
     </div>
 
     <div class="stats-grid">
@@ -225,6 +233,93 @@
                 });
               } else {
                 showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+
+    function createBackup() {
+      showConfirm(
+        'Create Database Backup',
+        'Create a backup of the entire database? This will save all data to a file.',
+        () => {
+          fetch('/admin/backup', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                const sizeKB = (data.size / 1024).toFixed(2);
+                showAlert('Success', `Backup created: ${data.fileName} (${sizeKB} KB)`, 'success');
+              } else {
+                showAlert('Error', data.error || 'Failed to create backup', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred while creating backup', 'error');
+            });
+        }
+      );
+    }
+
+    function viewBackups() {
+      fetch('/admin/backups')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.backups.length > 0) {
+            let html = '<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr><th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">File Name</th>';
+            html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">Size</th>';
+            html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">Created</th>';
+            html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">Actions</th></tr></thead><tbody>';
+            
+            data.backups.forEach(backup => {
+              const sizeKB = (backup.size / 1024).toFixed(2);
+              const date = new Date(backup.created).toLocaleString();
+              html += `<tr style="border-bottom: 1px solid #444;">`;
+              html += `<td style="padding: 8px;">${backup.fileName}</td>`;
+              html += `<td style="padding: 8px;">${sizeKB} KB</td>`;
+              html += `<td style="padding: 8px;">${date}</td>`;
+              html += `<td style="padding: 8px;">`;
+              html += `<button class="btn btn-small" onclick="downloadBackup('${backup.fileName}')">Download</button> `;
+              html += `<button class="btn btn-small btn-danger" onclick="deleteBackup('${backup.fileName}')">Delete</button>`;
+              html += `</td></tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            showAlert('Database Backups', html, 'info');
+          } else {
+            showAlert('No Backups', 'No backup files found.', 'info');
+          }
+        })
+        .catch(err => {
+          console.error('Error:', err);
+          showAlert('Error', 'Failed to load backups', 'error');
+        });
+    }
+
+    function downloadBackup(fileName) {
+      window.location.href = '/admin/backup/download/' + fileName;
+    }
+
+    function deleteBackup(fileName) {
+      showConfirm(
+        'Delete Backup',
+        `Are you sure you want to delete ${fileName}? This action cannot be undone.`,
+        () => {
+          fetch('/admin/backup/' + fileName, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', 'Backup deleted successfully', 'success', () => {
+                  viewBackups();
+                });
+              } else {
+                showAlert('Error', data.error || 'Failed to delete backup', 'error');
               }
             })
             .catch(err => {

@@ -4,6 +4,8 @@ node_modules/
 npm-debug.log*
 smms.db
 public/uploads/*
+logs/
+backups/
 .DS_Store
 .vscode/
 .idea/
@@ -18,3 +20,8 @@ build/
 .env.production.local
 .venv/
 venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python

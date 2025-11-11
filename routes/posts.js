@@ -4,6 +4,8 @@ const path = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const db = require('../database');
+const logger = require('../utils/logger');
+const sanitizer = require('../utils/sanitizer');
 
 const router = express.Router();
 
@@ -88,16 +90,32 @@ router.post(
       .trim()
       .isLength({ max: 200 })
       .withMessage('Title must be less than 200 characters.')
-      .escape(),
+      .escape()
+      .custom((value) => {
+        if (sanitizer.containsXss(value) || sanitizer.containsSqlInjection(value)) {
+          throw new Error('Invalid characters in title');
+        }
+        return true;
+      }),
     body('content')
       .trim()
       .isLength({ min: 1, max: 5000 })
       .withMessage('Content must be between 1 and 5000 characters.')
-      .escape(),
+      .escape()
+      .custom((value) => {
+        if (sanitizer.containsXss(value) || sanitizer.containsSqlInjection(value)) {
+          throw new Error('Invalid characters in content');
+        }
+        return true;
+      }),
   ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      logger.warn('Post creation validation failed', {
+        userId: req.session.userId,
+        errors: errors.array(),
+      });
       return res.render('create-post', { errors: errors.array() });
     }
 
@@ -106,21 +124,44 @@ router.post(
       const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
       const status = saveAs === 'draft' ? 'draft' : 'published';
 
+      // Additional file validation if image uploaded
+      if (req.file) {
+        const fileValidation = sanitizer.validateFileUpload(req.file);
+        if (!fileValidation.valid) {
+          logger.security('Invalid file upload attempt', {
+            userId: req.session.userId,
+            error: fileValidation.error,
+            fileName: req.file.originalname,
+          });
+          return res.render('create-post', {
+            errors: [{ msg: fileValidation.error }],
+          });
+        }
+      }
+
       // Ensure the uploads directory exists
       const uploadsDir = path.join(__dirname, '../public/uploads');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
       }
 
-      await db.run(
+      const result = await db.run(
         `INSERT INTO posts (user_id, title, content, image_path, status, created_at, updated_at, published_at)
          VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CASE WHEN ? = 'published' THEN CURRENT_TIMESTAMP ELSE NULL END)`,
         [req.session.userId, title || null, content, imagePath, status, status]
       );
 
+      logger.info('Post created', {
+        userId: req.session.userId,
+        postId: result.lastID,
+        status,
+        hasImage: !!imagePath,
+      });
+
+      req.session.success_msg = `Post ${status === 'draft' ? 'saved as draft' : 'created'} successfully!`;
       res.redirect('/dashboard?created=true');
     } catch (err) {
-      console.error('Post creation error:', err);
+      logger.error('Post creation error', { error: err.message, userId: req.session.userId });
       res.render('create-post', {
         errors: [{ msg: 'An error occurred while creating the post.' }],
       });

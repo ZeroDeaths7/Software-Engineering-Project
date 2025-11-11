@@ -30,6 +30,24 @@
       <p>Welcome, <strong><%= userEmail %></strong></p>
     </div>
 
+    <% if (success_msg) { %>
+      <div class="alert alert-success">
+        ✓ <%= success_msg %>
+      </div>
+    <% } %>
+
+    <% if (error_msg) { %>
+      <div class="alert alert-error">
+        <%= error_msg %>
+      </div>
+    <% } %>
+
+    <% if (warning_msg) { %>
+      <div class="alert alert-warning">
+        ⚠ <%= warning_msg %>
+      </div>
+    <% } %>
+
     <% if (created) { %>
       <div class="alert alert-success">
         ✓ Post created successfully!

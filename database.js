@@ -59,6 +59,23 @@ const initialize = () => {
         }
       );
 
+      // Audit log table for security events
+      db.run(
+        `CREATE TABLE IF NOT EXISTS audit_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER,
+          action TEXT NOT NULL,
+          details TEXT,
+          ip_address TEXT,
+          user_agent TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )`,
+        (err) => {
+          if (err) reject(err);
+        }
+      );
+
       // Seed initial admin user if not exists
       const adminEmail = 'admin@smms.local';
       db.get(
