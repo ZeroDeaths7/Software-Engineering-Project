@@ -60,6 +60,17 @@
       color: #fff;
     }
 
+    /* User status classes (no inline styles) */
+    .status-active {
+      color: #06d6a0;
+      font-weight: 700;
+    }
+
+    .status-inactive {
+      color: #ef476f;
+      font-weight: 700;
+    }
+
     .post-meta {
       display: flex;
       gap: 16px;
@@ -193,7 +204,7 @@
         <div class="user-details">
           <h2><%= user.email %></h2>
           <p><strong>Role:</strong> <%= user.role.toUpperCase() %></p>
-          <p><strong>Status:</strong> <span id="user-status">
+          <p><strong>Status:</strong> <span id="user-status" class="<%= user.is_active ? 'status-active' : 'status-inactive' %>">
             <%= user.is_active ? 'ACTIVE' : 'INACTIVE' %>
           </span></p>
         </div>
@@ -254,14 +265,7 @@
 
   <script src="/modal.js?v=6"></script>
   <script>
-    // Set user status color
-    const userStatus = document.getElementById('user-status');
-    const isActive = <% if (user.is_active) { %>true<% } else { %>false<% } %>;
-    if (isActive) {
-      userStatus.style.color = '#06d6a0';
-    } else {
-      userStatus.style.color = '#ef476f';
-    }
+    // No inline styling: user status color handled via CSS classes
 
     function deletePost(button) {
       const postId = button.getAttribute('data-post-id');
