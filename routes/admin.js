@@ -346,4 +346,96 @@ router.delete('/backup/:fileName', (req, res) => {
   }
 });
 
+/**
+ * GET /admin/users - View all users list
+ * SMMS-F-014: Admin manage users
+ */
+router.get('/users', async (req, res) => {
+  try {
+    const users = await db.all(
+      'SELECT id, email, role, is_active, created_at FROM users ORDER BY created_at DESC'
+    );
+
+    res.render('admin-users', { users });
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).render('error', { message: 'Failed to load users list.' });
+  }
+});
+
+/**
+ * GET /admin/users/:userId/posts - View all posts by a specific user
+ * SMMS-F-014: Admin view user posts
+ */
+router.get('/users/:userId/posts', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Fetch user details
+    const user = await db.get(
+      'SELECT id, email, role, is_active FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).render('error', { message: 'User not found.' });
+    }
+
+    // Fetch all posts by user
+    const posts = await db.all(
+      `SELECT id, title, content, image_path, status, created_at, updated_at, published_at, scheduled_time
+       FROM posts WHERE user_id = ? ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    res.render('admin-user-posts', { user, posts });
+  } catch (err) {
+    console.error('Error fetching user posts:', err);
+    res.status(500).render('error', { message: 'Failed to load user posts.' });
+  }
+});
+
+/**
+ * DELETE /admin/users/:userId/posts/:postId - Delete a post (admin only)
+ * SMMS-F-014: Admin delete user posts
+ */
+router.delete('/users/:userId/posts/:postId', async (req, res) => {
+  try {
+    const { userId, postId } = req.params;
+
+    // Verify post exists and belongs to the user
+    const post = await db.get(
+      'SELECT id, user_id, image_path FROM posts WHERE id = ? AND user_id = ?',
+      [postId, userId]
+    );
+
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found.' });
+    }
+
+    // Delete the post
+    await db.run('DELETE FROM posts WHERE id = ?', [postId]);
+
+    // Clean up image file if it exists
+    if (post.image_path) {
+      const fs = require('fs');
+      const imagePath = path.join(__dirname, '../public', post.image_path);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    logger.info('Post deleted by admin', {
+      adminId: req.session.userId,
+      postId: postId,
+      userId: userId,
+    });
+
+    res.json({ success: true, message: 'Post deleted successfully.' });
+  } catch (err) {
+    logger.error('Post deletion error', { error: err.message, adminId: req.session.userId });
+    res.status(500).json({ error: 'Failed to delete post.' });
+  }
+});
+
 module.exports = router;

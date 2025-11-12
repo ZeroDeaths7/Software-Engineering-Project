@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Manage Users</title>
+  <link rel="stylesheet" href="/style.css?v=2">
+  <style>
+    .user-list-container {
+      margin: 20px 0;
+    }
+
+    .user-card {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .user-card:hover {
+      background: #333;
+      border-color: #9d4edd;
+      box-shadow: 0 0 10px rgba(157, 78, 221, 0.2);
+    }
+
+    .user-info {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .user-email {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .user-email:hover {
+      color: #9d4edd;
+    }
+
+    .user-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-admin {
+      background: #ff006e;
+      color: #fff;
+    }
+
+    .badge-user {
+      background: #3a86ff;
+      color: #fff;
+    }
+
+    .badge-active {
+      background: #06d6a0;
+      color: #fff;
+    }
+
+    .badge-inactive {
+      background: #ef476f;
+      color: #fff;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-view-posts {
+      padding: 8px 16px;
+      background: #9d4edd;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-view-posts:hover {
+      background: #c77dff;
+      transform: translateY(-2px);
+    }
+
+    .no-users {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-size: 18px;
+    }
+
+    .users-count {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/admin">Admin Panel</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>User Management</h1>
+      <a href="/admin" class="btn btn-secondary">Back to Admin Panel</a>
+    </div>
+
+    <div class="users-count">
+      Total Users: <strong><%= users.length %></strong>
+    </div>
+
+    <div class="user-list-container">
+      <% if (users && users.length > 0) { %>
+        <% users.forEach(user => { %>
+          <div class="user-card">
+            <div class="user-info">
+              <a href="/admin/users/<%= user.id %>/posts" class="user-email">
+                <%= user.email %>
+              </a>
+              <div class="user-meta">
+                <span class="badge badge-<%= user.role %>">
+                  <%= user.role.toUpperCase() %>
+                </span>
+                <span class="badge <%= user.is_active ? 'badge-active' : 'badge-inactive' %>">
+                  <%= user.is_active ? 'ACTIVE' : 'INACTIVE' %>
+                </span>
+                <span style="color: #999; font-size: 12px;">
+                  Joined: <%= new Date(user.created_at).toLocaleDateString() %>
+                </span>
+              </div>
+            </div>
+            <div class="user-actions">
+              <button class="btn-view-posts" onclick="viewUserPosts('<%= user.id %>', '<%= user.email %>')">
+                View Posts
+              </button>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="no-users">
+          No users found.
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script src="/modal.js?v=6"></script>
+  <script>
+    function viewUserPosts(userId, userEmail) {
+      window.location.href = '/admin/users/' + userId + '/posts';
+    }
+  </script>
+</body>
+</html>

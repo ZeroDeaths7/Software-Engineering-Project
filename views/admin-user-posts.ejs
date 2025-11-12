@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - User Posts</title>
+  <link rel="stylesheet" href="/style.css?v=2">
+  <style>
+    .post-card {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+      background: #333;
+      border-color: #9d4edd;
+      box-shadow: 0 0 10px rgba(157, 78, 221, 0.2);
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+    }
+
+    .post-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+      flex: 1;
+    }
+
+    .post-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-left: 12px;
+    }
+
+    .status-draft {
+      background: #808080;
+      color: #fff;
+    }
+
+    .status-published {
+      background: #06d6a0;
+      color: #fff;
+    }
+
+    .status-scheduled {
+      background: #ffa500;
+      color: #fff;
+    }
+
+    .post-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .post-content {
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      color: #ddd;
+      line-height: 1.5;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .post-image {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .btn-delete-post {
+      padding: 8px 16px;
+      background: #ef476f;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-delete-post:hover {
+      background: #ff006e;
+      transform: translateY(-2px);
+    }
+
+    .no-posts {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-size: 18px;
+    }
+
+    .user-header {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .user-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-details h2 {
+      margin: 0 0 8px 0;
+      color: #fff;
+    }
+
+    .user-details p {
+      margin: 4px 0;
+      color: #999;
+      font-size: 14px;
+    }
+
+    .posts-count {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 12px;
+    }
+
+    .breadcrumb {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 20px;
+    }
+
+    .breadcrumb a {
+      color: #9d4edd;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/admin">Admin Panel</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="/admin">Admin Panel</a> &gt; 
+      <a href="/admin/users">Users</a> &gt; 
+      <strong><%= user.email %></strong>
+    </div>
+
+    <div class="page-header">
+      <h1>Posts by <%= user.email %></h1>
+      <a href="/admin/users" class="btn btn-secondary">Back to Users</a>
+    </div>
+
+    <div class="user-header">
+      <div class="user-info">
+        <div class="user-details">
+          <h2><%= user.email %></h2>
+          <p><strong>Role:</strong> <%= user.role.toUpperCase() %></p>
+          <p><strong>Status:</strong> <span id="user-status">
+            <%= user.is_active ? 'ACTIVE' : 'INACTIVE' %>
+          </span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="posts-count">
+      Total Posts: <strong><%= posts.length %></strong>
+    </div>
+
+    <div class="posts-container">
+      <% if (posts && posts.length > 0) { %>
+        <% posts.forEach(post => { %>
+          <div class="post-card">
+            <div class="post-header">
+              <h3 class="post-title"><%= post.title || 'Untitled' %></h3>
+              <span class="post-status status-<%= post.status %>">
+                <%= post.status.toUpperCase() %>
+              </span>
+            </div>
+
+            <div class="post-meta">
+              <span>Created: <%= new Date(post.created_at).toLocaleString() %></span>
+              <% if (post.published_at) { %>
+                <span>Published: <%= new Date(post.published_at).toLocaleString() %></span>
+              <% } %>
+              <% if (post.scheduled_time) { %>
+                <span>Scheduled: <%= new Date(post.scheduled_time).toLocaleString() %></span>
+              <% } %>
+            </div>
+
+            <% if (post.image_path) { %>
+              <img src="<%= post.image_path %>" alt="Post image" class="post-image">
+            <% } %>
+
+            <div class="post-content">
+              <%= post.content %>
+            </div>
+
+            <div class="post-actions">
+              <button class="btn-delete-post" data-post-id="<%= post.id %>" data-post-title="<%= post.title || 'Untitled' %>" onclick="deletePost(this)">
+                Delete Post
+              </button>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="no-posts">
+          This user has no posts yet.
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script src="/modal.js?v=6"></script>
+  <script>
+    // Set user status color
+    const userStatus = document.getElementById('user-status');
+    const isActive = <% if (user.is_active) { %>true<% } else { %>false<% } %>;
+    if (isActive) {
+      userStatus.style.color = '#06d6a0';
+    } else {
+      userStatus.style.color = '#ef476f';
+    }
+
+    function deletePost(button) {
+      const postId = button.getAttribute('data-post-id');
+      const postTitle = button.getAttribute('data-post-title');
+      
+      showConfirm(
+        'Delete Post',
+        `Are you sure you want to delete the post "${postTitle}"? This action cannot be undone.`,
+        () => {
+          fetch('/admin/users/<%= user.id %>/posts/' + postId, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'Post deleted successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.error || 'Failed to delete post', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred while deleting the post', 'error');
+            });
+        }
+      );
+    }
+  </script>
+</body>
+</html>
