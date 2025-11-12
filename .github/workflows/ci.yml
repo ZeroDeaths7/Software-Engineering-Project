@@ -1,0 +1,57 @@
+name: CI (pytest integration)
+
+on:
+  push:
+    branches: [ main, master, Website_Making ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  pytest_integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+        python-version: ['3.11']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Start server in background
+        env:
+          PORT: 3000
+        run: |
+          # Start the Node app in the background and save its PID
+          npm start &> server.log & echo $! > server.pid
+          # Wait for the HTTP endpoint to be available
+          npx wait-on http://localhost:3000
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python test deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest requests; fi
+
+      - name: Run pytest
+        run: pytest -q
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
+          echo "==== server.log ===="
+          tail -n +1 server.log || true

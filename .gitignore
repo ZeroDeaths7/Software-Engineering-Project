@@ -5,6 +5,8 @@ yarn-error.log*
 dist/
 build/
 *.tsbuildinfo
+logs/
+backups/
 
 # Python
 .venv/
@@ -13,12 +15,11 @@ env/
 ENV/
 .Python
 *.py[cod]
+*$py.class
 __pycache__/
 *.so
-.Python
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -57,12 +58,6 @@ public/uploads/*
 .idea/
 *.sublime-project
 *.sublime-workspace
-.DS_Store
-.AppleDouble
-.LSOverride
-*.swp
-*.swo
-*~
 .project
 .classpath
 .c9/
@@ -73,7 +68,14 @@ public/uploads/*
 Thumbs.db
 .Thumbs.db
 .DS_Store
+.AppleDouble
+.LSOverride
 ehthumbs.db
+
+# Editor temp files
+*.swp
+*.swo
+*~
 
 # Logs
 *.log

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Admin Panel</title>
+  <link rel="stylesheet" href="/style.css?v=2">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/admin">Admin Panel</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Admin Panel</h1>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-primary" onclick="autoPublishPosts()">
+          Auto-Publish Scheduled Posts
+        </button>
+        <button class="btn btn-success" onclick="createBackup()">
+          Create Database Backup
+        </button>
+        <button class="btn btn-secondary" onclick="viewBackups()">
+          View Backups
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3><%= stats.totalUsers %></h3>
+        <p>Total Users</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.adminCount %></h3>
+        <p>Admins</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.totalPosts %></h3>
+        <p>Total Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.publishedPosts %></h3>
+        <p>Published Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.scheduledPosts %></h3>
+        <p>Scheduled Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= stats.draftPosts %></h3>
+        <p>Draft Posts</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h2>User Management</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(user => { %>
+            <tr>
+              <td><%= user.email %></td>
+              <td>
+                <span class="badge badge-<%= user.role %>">
+                  <%= user.role.toUpperCase() %>
+                </span>
+              </td>
+              <td>
+                <span class="badge <%= user.is_active ? 'badge-active' : 'badge-inactive' %>">
+                  <%= user.is_active ? 'ACTIVE' : 'INACTIVE' %>
+                </span>
+              </td>
+              <td><%= new Date(user.created_at).toLocaleDateString() %></td>
+              <td>
+                <% if (!user.is_active) { %>
+                  <button class="btn btn-small" onclick="activateUser('<%= user.id %>')">
+                    Activate
+                  </button>
+                <% } else { %>
+                  <button class="btn btn-small btn-danger" onclick="deactivateUser('<%= user.id %>')">
+                    Deactivate
+                  </button>
+                <% } %>
+
+                <% if (user.role === 'user') { %>
+                  <button class="btn btn-small" onclick="promoteUser('<%= user.id %>')">
+                    Make Admin
+                  </button>
+                <% } else { %>
+                  <button class="btn btn-small" onclick="demoteUser('<%= user.id %>')">
+                    Remove Admin
+                  </button>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script src="/modal.js?v=6"></script>
+  <script>
+    function deactivateUser(userId) {
+      showConfirm(
+        'Deactivate User',
+        'Are you sure you want to deactivate this user? They will not be able to access the system.',
+        () => {
+          fetch('/admin/deactivate/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User deactivated successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+
+    function activateUser(userId) {
+      showConfirm(
+        'Activate User',
+        'Are you sure you want to activate this user? They will be able to access the system.',
+        () => {
+          fetch('/admin/activate/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User activated successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+
+    function promoteUser(userId) {
+      showConfirm(
+        'Promote to Admin',
+        'Are you sure you want to promote this user to admin? They will have full administrative privileges.',
+        () => {
+          fetch('/admin/promote/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User promoted to admin', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+
+    function demoteUser(userId) {
+      showConfirm(
+        'Remove Admin Privileges',
+        'Are you sure you want to demote this admin to a regular user? They will lose administrative privileges.',
+        () => {
+          fetch('/admin/demote/' + userId, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'User demoted successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+
+    function autoPublishPosts() {
+      showConfirm(
+        'Auto-Publish Posts',
+        'Publish all scheduled posts that are ready? This action will immediately publish all eligible scheduled posts.',
+        () => {
+          fetch('/admin/publish-scheduled', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', data.message || 'Posts published successfully', 'success', () => {
+                  location.reload();
+                });
+              } else {
+                showAlert('Error', data.message || data.error, 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+
+    function createBackup() {
+      showConfirm(
+        'Create Database Backup',
+        'Create a backup of the entire database? This will save all data to a file.',
+        () => {
+          fetch('/admin/backup', { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                const sizeKB = (data.size / 1024).toFixed(2);
+                showAlert('Success', `Backup created: ${data.fileName} (${sizeKB} KB)`, 'success');
+              } else {
+                showAlert('Error', data.error || 'Failed to create backup', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred while creating backup', 'error');
+            });
+        }
+      );
+    }
+
+    function viewBackups() {
+      fetch('/admin/backups')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.backups.length > 0) {
+            let html = '<div style="max-height: 400px; overflow-y: auto;"><table style="width: 100%; border-collapse: collapse;">';
+            html += '<thead><tr><th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">File Name</th>';
+            html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">Size</th>';
+            html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">Created</th>';
+            html += '<th style="text-align: left; padding: 8px; border-bottom: 2px solid #9d4edd;">Actions</th></tr></thead><tbody>';
+            
+            data.backups.forEach(backup => {
+              const sizeKB = (backup.size / 1024).toFixed(2);
+              const date = new Date(backup.created).toLocaleString();
+              html += `<tr style="border-bottom: 1px solid #444;">`;
+              html += `<td style="padding: 8px;">${backup.fileName}</td>`;
+              html += `<td style="padding: 8px;">${sizeKB} KB</td>`;
+              html += `<td style="padding: 8px;">${date}</td>`;
+              html += `<td style="padding: 8px;">`;
+              html += `<button class="btn btn-small" onclick="downloadBackup('${backup.fileName}')">Download</button> `;
+              html += `<button class="btn btn-small btn-danger" onclick="deleteBackup('${backup.fileName}')">Delete</button>`;
+              html += `</td></tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            showAlert('Database Backups', html, 'info');
+          } else {
+            showAlert('No Backups', 'No backup files found.', 'info');
+          }
+        })
+        .catch(err => {
+          console.error('Error:', err);
+          showAlert('Error', 'Failed to load backups', 'error');
+        });
+    }
+
+    function downloadBackup(fileName) {
+      window.location.href = '/admin/backup/download/' + fileName;
+    }
+
+    function deleteBackup(fileName) {
+      showConfirm(
+        'Delete Backup',
+        `Are you sure you want to delete ${fileName}? This action cannot be undone.`,
+        () => {
+          fetch('/admin/backup/' + fileName, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                showAlert('Success', 'Backup deleted successfully', 'success', () => {
+                  viewBackups();
+                });
+              } else {
+                showAlert('Error', data.error || 'Failed to delete backup', 'error');
+              }
+            })
+            .catch(err => {
+              console.error('Error:', err);
+              showAlert('Error', 'An error occurred', 'error');
+            });
+        }
+      );
+    }
+  </script>
+</body>
+</html>

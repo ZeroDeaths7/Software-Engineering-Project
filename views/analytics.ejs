@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Analytics</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/posts/drafts">Drafts</a></li>
+        <li><a href="/posts/scheduled">Posts</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Analytics Dashboard</h1>
+      <p>Your post statistics and insights</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3><%= analytics.totalPosts %></h3>
+        <p>Total Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= analytics.publishedPosts %></h3>
+        <p>Published Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= analytics.scheduledPosts %></h3>
+        <p>Scheduled Posts</p>
+      </div>
+      <div class="stat-card">
+        <h3><%= analytics.draftPosts %></h3>
+        <p>Draft Posts</p>
+      </div>
+    </div>
+
+    <div class="analytics-section">
+      <h2>Post Distribution</h2>
+      <div class="chart-placeholder">
+        <p>📊 Post Count by Status</p>
+        <ul style="list-style: none; padding: 0;">
+          <li>🟢 Published: <%= analytics.publishedPosts %></li>
+          <li>🟡 Scheduled: <%= analytics.scheduledPosts %></li>
+          <li>⚪ Drafts: <%= analytics.draftPosts %></li>
+        </ul>
+      </div>
+    </div>
+
+    <% if (monthlyData && monthlyData.length > 0) { %>
+      <div class="analytics-section">
+        <h2>Monthly Activity</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Status</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% monthlyData.forEach(item => { %>
+              <tr>
+                <td><%= item.month %></td>
+                <td><span class="badge badge-<%= item.status %>"><%= item.status %></span></td>
+                <td><%= item.count %></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMMS - Create Post</title>
+  <link rel="stylesheet" href="/style.css?v=2">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">SMMS</a>
+      <ul class="nav-menu">
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/posts/create">Create Post</a></li>
+        <li><a href="/posts/drafts">Drafts</a></li>
+        <li><a href="/posts/scheduled">Posts</a></li>
+        <li><a href="/analytics">Analytics</a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Create a New Post</h1>
+      <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert alert-error">
+        <% errors.forEach(error => { %>
+          <p><%= error.msg %></p>
+        <% }); %>
+      </div>
+    <% } %>
+
+    <form method="POST" action="/posts/create" enctype="multipart/form-data" class="form-card">
+      <div class="form-group">
+        <label for="title">Post Title (Optional):</label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          maxlength="200"
+          placeholder="Give your post a title"
+        >
+        <small>Max 200 characters</small>
+      </div>
+
+      <div class="form-group">
+        <label for="content">Post Content:</label>
+        <textarea
+          id="content"
+          name="content"
+          rows="10"
+          maxlength="5000"
+          placeholder="Write your post content here..."
+          required
+        ></textarea>
+        <small>Max 5000 characters</small>
+      </div>
+
+      <div class="form-group">
+        <label for="image">Upload Image (Optional):</label>
+        <input
+          type="file"
+          id="image"
+          name="image"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          onchange="previewImage(event)"
+        >
+        <small>Allowed: JPEG, PNG, GIF, WebP. Max 5MB</small>
+        <div id="imagePreview" class="image-preview-container" style="display: none; margin-top: 1rem;">
+          <img id="previewImg" src="" alt="Preview" class="image-preview">
+          <button type="button" class="btn btn-small btn-danger" onclick="removeImage()">Remove</button>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" name="saveAs" value="draft" class="btn btn-secondary">
+          Save as Draft
+        </button>
+        <button type="submit" name="saveAs" value="post" class="btn btn-primary">
+          Create Post
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Social Media Management System (SMMS). All rights reserved.</p>
+  </footer>
+
+  <script src="/modal.js?v=6"></script>
+  <script>
+    // Character counter for content
+    const contentArea = document.getElementById('content');
+    const charLimit = 5000;
+
+    contentArea.addEventListener('input', () => {
+      if (contentArea.value.length > charLimit) {
+        contentArea.value = contentArea.value.substring(0, charLimit);
+      }
+    });
+
+    // Image preview function
+    function previewImage(event) {
+      const file = event.target.files[0];
+      const previewContainer = document.getElementById('imagePreview');
+      const previewImg = document.getElementById('previewImg');
+      
+      if (file) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+          showAlert('File Too Large', 'File size exceeds 5MB limit. Please choose a smaller image.', 'error');
+          event.target.value = '';
+          previewContainer.style.display = 'none';
+          return;
+        }
+
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+          showAlert('Invalid Format', 'Only JPEG, PNG, GIF, and WebP images are allowed.', 'error');
+          event.target.value = '';
+          previewContainer.style.display = 'none';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Remove image function
+    function removeImage() {
+      document.getElementById('image').value = '';
+      document.getElementById('imagePreview').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
