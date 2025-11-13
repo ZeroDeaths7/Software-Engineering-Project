@@ -1,4 +1,4 @@
-name: CI (pytest integration)
+name: CI (pytest + fuzzing)
 
 on:
   push:
@@ -31,9 +31,7 @@ jobs:
         env:
           PORT: 3000
         run: |
-          # Start the Node app in the background and save its PID
           npm start &> server.log & echo $! > server.pid
-          # Wait for the HTTP endpoint to be available
           npx wait-on http://localhost:3000
 
       - name: Setup Python
@@ -44,10 +42,16 @@ jobs:
       - name: Install Python test deps
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest requests; fi
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else pip install pytest requests hypothesis faker; fi
 
-      - name: Run pytest
-        run: pytest -q
+      - name: Run stub tests (basic sanity checks)
+        run: pytest tests/test_basic.py::TestStubs -v
+
+      - name: Run fuzzer tests (property-based testing)
+        run: pytest tests/test_basic.py::TestFuzzers -v --hypothesis-seed=0
+
+      - name: Run all pytest tests
+        run: pytest tests/ -v --tb=short
 
       - name: Stop server
         if: always()
@@ -55,3 +59,4 @@ jobs:
           if [ -f server.pid ]; then kill $(cat server.pid) || true; fi
           echo "==== server.log ===="
           tail -n +1 server.log || true
+
